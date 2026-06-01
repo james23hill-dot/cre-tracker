@@ -337,6 +337,27 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--ink-3);}
 
+/* === LOGIN SCREEN === */
+.login-screen{position:fixed;inset:0;background:var(--paper);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-2);width:100%;max-width:400px;padding:40px;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.login-mark{width:44px;height:44px;border-radius:12px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700;font-size:19px;letter-spacing:-0.03em;flex-shrink:0;}
+.login-title{font-size:20px;font-weight:700;letter-spacing:-0.02em;}
+.login-sub{font-size:13px;color:var(--ink-3);margin-top:2px;}
+.login-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.login-input{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:11px 14px;font-size:14.5px;color:var(--ink);outline:none;font-family:var(--sans);}
+.login-input:focus{border-color:var(--ink-3);}
+.login-field{margin-bottom:18px;}
+.login-btn{width:100%;height:44px;background:var(--ink);color:var(--paper);border:none;border-radius:9px;font-size:14.5px;font-weight:600;cursor:pointer;margin-top:8px;font-family:var(--sans);letter-spacing:-0.01em;}
+.login-btn:hover{opacity:.88;}
+.login-error{background:var(--danger-soft);color:var(--danger);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;}
+.login-error.show{display:block;}
+.login-footer{text-align:center;margin-top:20px;font-size:12px;color:var(--ink-3);}
+.login-divider{display:flex;align-items:center;gap:10px;margin:20px 0;color:var(--ink-3);font-size:12px;}
+.login-divider::before,.login-divider::after{content:"";flex:1;height:1px;background:var(--line);}
+.news-loading{padding:12px 0;color:var(--ink-3);font-size:13px;text-align:center;}
+.rate-loading{color:var(--ink-3);font-size:13px;}
+
 /* Responsive */
 @media(max-width:1100px){
   .cc{grid-template-columns:260px 1fr;}
@@ -354,6 +375,31 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 </head>
 <body>
 
+<!-- LOGIN SCREEN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-mark">CH</div>
+      <div>
+        <div class="login-title">CRE HQ</div>
+        <div class="login-sub">Carolinas Desk &middot; Private Access</div>
+      </div>
+    </div>
+    <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+    <div class="login-field">
+      <label class="login-label">Username</label>
+      <input class="login-input" id="loginUser" type="text" placeholder="your username" autocomplete="username"/>
+    </div>
+    <div class="login-field">
+      <label class="login-label">Password</label>
+      <input class="login-input" id="loginPass" type="password" placeholder="&bull;&bull;&bull;&bull;&bull;&bull;&bull;&bull;" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin();"/>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Sign in &rarr;</button>
+    <div class="login-footer">CRE HQ &middot; Carolinas Desk &middot; Private</div>
+  </div>
+</div>
+
+<div id="appShell" style="display:none">
 <!-- APP BAR -->
 <header class="appbar">
   <div class="brand">
@@ -583,6 +629,8 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
   <div class="modal" id="modalBox"></div>
 </div>
 
+</div><!-- /appShell -->
+
 <script>
 'use strict';
 // ============================================================
@@ -764,17 +812,84 @@ function setInitials(v) { STATE.initials = v.toUpperCase().slice(0,2); saveState
 function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
 
 // ============================================================
-// NEWS
+// LOGIN
 // ============================================================
-function renderNews() {
+const LOGIN_KEY = 'cre_hq_auth';
+const VALID_USERS = [
+  { user: 'james', pass: 'Gamecock23!' },
+  { user: 'admin', pass: 'crehq2024' },
+];
+function checkAuth() {
+  try { return sessionStorage.getItem(LOGIN_KEY) === 'true'; } catch(e) { return false; }
+}
+function doLogin() {
+  const u = (document.getElementById('loginUser').value||'').trim().toLowerCase();
+  const p = (document.getElementById('loginPass').value||'').trim();
+  const ok = VALID_USERS.some(v => v.user === u && v.pass === p);
+  if (ok) {
+    try { sessionStorage.setItem(LOGIN_KEY, 'true'); } catch(e) {}
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+    init();
+  } else {
+    const err = document.getElementById('loginError');
+    err.classList.add('show');
+    document.getElementById('loginPass').value = '';
+    document.getElementById('loginPass').focus();
+    setTimeout(() => err.classList.remove('show'), 3000);
+  }
+}
+
+// ============================================================
+// NEWS - Live via NewsAPI
+// ============================================================
+const NEWS_API_KEY = '260b9efbee434627bfbb5fa41dc1cf74';
+async function fetchNews() {
+  const panel = document.getElementById('newsPanel');
+  panel.innerHTML = '<div style="padding:12px 0;color:var(--ink-3);font-size:13px;text-align:center;">Loading live news…</div>';
+  try {
+    const query = 'commercial real estate South Carolina OR North Carolina OR Charlotte OR Greenville OR Charleston OR Raleigh OR Columbia OR "York County"';
+    const url = `https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`;
+    const res = await fetch(url);
+    const data = await res.json();
+    if (data.status === 'ok' && data.articles && data.articles.length > 0) {
+      const articles = data.articles.filter(a => a.title && a.title !== '[Removed]').slice(0, 7);
+      panel.innerHTML = articles.map(a => {
+        const text = (a.title + ' ' + (a.description||'')).toLowerCase();
+        let geo = 'SE Region';
+        if (text.includes('york county') || text.includes('rock hill')) geo = 'York County';
+        else if (text.includes('greenville')) geo = 'Greenville';
+        else if (text.includes('charlotte')) geo = 'Charlotte';
+        else if (text.includes('charleston')) geo = 'Charleston';
+        else if (text.includes('columbia')) geo = 'Columbia';
+        else if (text.includes('raleigh') || text.includes('triangle')) geo = 'Raleigh';
+        else if (text.includes('spartanburg')) geo = 'Spartanburg';
+        else if (text.includes('wilmington')) geo = 'Wilmington';
+        const outlet = (a.source && a.source.name ? a.source.name : 'News').slice(0, 22);
+        const diff = Math.floor((Date.now() - new Date(a.publishedAt)) / 60000);
+        const ago = diff < 60 ? diff+'m ago' : diff < 1440 ? Math.floor(diff/60)+'h ago' : Math.floor(diff/1440)+'d ago';
+        return `<div class="item">
+          <div class="src"><span class="geo">${geo}</span> · ${outlet} <span style="float:right;color:var(--ink-3);font-size:10px">${ago}</span></div>
+          <div class="hl" onclick="window.open('${a.url}','_blank')" style="cursor:pointer" title="${a.title.replace(/'/g,"")}">${a.title.slice(0,88)}${a.title.length>88?'…':''}</div>
+        </div>`;
+      }).join('');
+    } else {
+      renderNewsFallback();
+    }
+  } catch(e) {
+    renderNewsFallback();
+  }
+}
+function renderNewsFallback() {
   const panel = document.getElementById('newsPanel');
   panel.innerHTML = STATE.news.slice(0,6).map(n => `
     <div class="item">
       <div class="src"><span class="geo">${n.geo}</span> · ${n.outlet}</div>
-      <div class="hl" onclick="toast('Opening: ${n.hl.slice(0,40)}…')">${n.hl}</div>
+      <div class="hl">${n.hl}</div>
     </div>
   `).join('');
 }
+function renderNews() { fetchNews(); }
 
 // ============================================================
 // WEEK GRID
@@ -1409,15 +1524,54 @@ function resetData() {
 }
 
 // ============================================================
-// LIVE RATES (FRED API — requires API key, falls back gracefully)
+// LIVE RATES — FRED API (St. Louis Fed)
 // ============================================================
+const FRED_KEY = 'abcdefghijklmnopqrstuvwxyz123456'; // Get free at fred.stlouisfed.org/docs/api/api_key.html
+async function fetchFredSeries(seriesId) {
+  const url = `https://api.stlouisfed.org/fred/series/observations?series_id=${seriesId}&api_key=${FRED_KEY}&sort_order=desc&limit=5&file_type=json`;
+  const res = await fetch(url);
+  const data = await res.json();
+  const obs = (data.observations || []).filter(o => o.value !== '.');
+  if (obs.length < 2) return null;
+  return { current: parseFloat(obs[0].value), prev: parseFloat(obs[1].value), date: obs[0].date };
+}
 async function fetchRates() {
-  // Show the date last updated
   document.getElementById('ratesDate').textContent = `Updated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
-  // In production: wire FRED API key and fetch DGS10 + SOFR
-  // For now the sample data is displayed; update below when you have a FRED key:
-  // const key = 'YOUR_FRED_KEY';
-  // const res = await fetch(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${key}&sort_order=desc&limit=1&file_type=json`);
+  if (FRED_KEY === 'YOUR_FRED_KEY_HERE') {
+    // No key yet — keep sample data displayed, just update the date
+    return;
+  }
+  try {
+    const [sofr, dgs10] = await Promise.all([
+      fetchFredSeries('SOFR'),
+      fetchFredSeries('DGS10'),
+    ]);
+    if (sofr) {
+      const chg = (sofr.current - sofr.prev).toFixed(2);
+      const dir = chg >= 0 ? 'up' : 'down';
+      const arrow = chg >= 0 ? '▲' : '▼';
+      document.getElementById('rate-sofr').innerHTML = `${sofr.current.toFixed(2)}<span style="font-size:13px">%</span>`;
+      document.getElementById('rate-sofr-chg').className = `chg ${dir}`;
+      document.getElementById('rate-sofr-chg').textContent = `${arrow} ${Math.abs(chg)}`;
+      document.getElementById('t-sofr').textContent = sofr.current.toFixed(2);
+      document.getElementById('t-sofr-chg').className = `c ${dir}`;
+      document.getElementById('t-sofr-chg').textContent = `${arrow}${Math.abs(chg)}`;
+    }
+    if (dgs10) {
+      const chg = (dgs10.current - dgs10.prev).toFixed(2);
+      const dir = chg >= 0 ? 'up' : 'down';
+      const arrow = chg >= 0 ? '▲' : '▼';
+      document.getElementById('rate-10y').innerHTML = `${dgs10.current.toFixed(2)}<span style="font-size:13px">%</span>`;
+      document.getElementById('rate-10y-chg').className = `chg ${dir}`;
+      document.getElementById('rate-10y-chg').textContent = `${arrow} ${Math.abs(chg)}`;
+      document.getElementById('t-10y').textContent = dgs10.current.toFixed(2);
+      document.getElementById('t-10y-chg').className = `c ${dir}`;
+      document.getElementById('t-10y-chg').textContent = `${arrow}${Math.abs(chg)}`;
+    }
+    document.getElementById('ratesDate').textContent = `Live · updated ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
+  } catch(e) {
+    console.log('Rates fetch failed, showing cached data');
+  }
 }
 
 // ============================================================
@@ -1440,7 +1594,24 @@ function init() {
   document.getElementById('deal-filter-brok').classList.toggle('on', STATE.dealFilterBrok !== false);
   document.getElementById('deal-filter-dev').classList.toggle('on', STATE.dealFilterDev !== false);
 }
-init();
+// Auto-login check on page load
+if (checkAuth()) {
+  document.getElementById('loginScreen').style.display = 'none';
+  document.getElementById('appShell').style.display = 'block';
+  init();
+} else {
+  // Show login, focus username field
+  setTimeout(() => {
+    const u = document.getElementById('loginUser');
+    if (u) u.focus();
+  }, 100);
+}
+
+// Allow Enter key on username to move to password
+document.addEventListener('DOMContentLoaded', () => {
+  const u = document.getElementById('loginUser');
+  if (u) u.addEventListener('keydown', e => { if (e.key === 'Enter') document.getElementById('loginPass').focus(); });
+});
 </script>
 </body>
 </html>
