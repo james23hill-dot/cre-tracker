@@ -337,6 +337,31 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 ::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
 ::-webkit-scrollbar-thumb:hover{background:var(--ink-3);}
 
+
+/* === PROJECTS TAB === */
+.proj-card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
+.proj-card.dev{border-top-color:var(--dev);}
+.proj-card.brok{border-top-color:var(--brok);}
+.proj-card-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 16px 10px;}
+.proj-card-h .pname{font-size:15px;font-weight:600;flex:1;}
+.proj-card-h .pactions{display:flex;gap:6px;flex-shrink:0;}
+.proj-meta{padding:0 16px 10px;font-size:12.5px;color:var(--ink-2);}
+.proj-progress{padding:0 16px 12px;}
+.proj-progress .bar-label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3);margin-bottom:5px;}
+.proj-progress .bar{height:8px;}
+.proj-deals-section{border-top:1px solid var(--line-2);padding:12px 16px;}
+.proj-deals-section .pdeal-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:8px;}
+.proj-deal-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-2);font-size:13px;}
+.proj-deal-row:last-child{border-bottom:none;}
+.proj-deal-row .dname{flex:1;font-weight:500;}
+.proj-deal-row .dstage{font-size:11.5px;color:var(--ink-2);}
+.proj-deal-row .dval{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink-2);}
+.proj-tasks-section{border-top:1px solid var(--line-2);padding:10px 16px;}
+.proj-tasks-section .ptask-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:6px;}
+.proj-task-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;}
+.proj-task-row .cbx-sm{width:13px;height:13px;border:1.5px solid var(--ink-3);border-radius:3px;flex-shrink:0;}
+.proj-empty{padding:20px;text-align:center;color:var(--ink-3);font-size:13px;}
+
 /* === LOGIN SCREEN === */
 .login-screen{position:fixed;inset:0;background:var(--paper);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .login-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-2);width:100%;max-width:400px;padding:40px;}
@@ -423,6 +448,7 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
   <button role="tab" data-tab="home" aria-selected="true">This Week</button>
   <button role="tab" data-tab="deals" aria-selected="false">Deal Tracker <span class="count" id="tab-deals-count">11</span></button>
   <button role="tab" data-tab="contacts" aria-selected="false">Contacts <span class="count" id="tab-contacts-count">7</span></button>
+  <button role="tab" data-tab="projects" aria-selected="false">Projects <span class="count" id="tab-projects-count">3</span></button>
   <button role="tab" data-tab="map" aria-selected="false">Deals Map <span class="count" id="tab-map-count">7</span></button>
 </nav>
 
@@ -555,6 +581,19 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
   </div>
 </section>
 
+<!-- ============ PROJECTS ============ -->
+<section class="screen" id="tab-projects">
+  <div class="toolbar">
+    <h3 style="font-size:16px;margin-right:6px">Long-term Projects</h3>
+    <button class="chip brok on" id="proj-filter-brok" onclick="toggleProjFilter('brok')">Brokerage</button>
+    <button class="chip dev on" id="proj-filter-dev" onclick="toggleProjFilter('dev')">Development</button>
+    <div class="spacer" style="flex:1"></div>
+    <span class="mono tiny muted" id="proj-summary"></span>
+    <button class="btn sm primary" onclick="openModal('project',{})">+ New project</button>
+  </div>
+  <div id="projectsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:var(--gut);align-items:start;"></div>
+</section>
+
 <!-- ============ DEALS MAP ============ -->
 <section class="screen" id="tab-map">
   <div class="mapgrid">
@@ -663,12 +702,12 @@ function defaultState() {
       {id:'t9',title:'Update commission forecast',type:'brok',projectId:'Brokerage',day:d(4),time:'',dueBadge:'',dueType:'',done:false},
     ],
     deals: [
-      {id:'d1',name:'Greenville Ind. Park — Ph 1',location:'Greenville, SC',size:'±85 ac',type:'dev',stage:'under-contract',value:2200000,level:4,lat:34.5,lng:-82.3},
-      {id:'d2',name:'Columbia Mixed-Use',location:'Columbia, SC',size:'infill block',type:'dev',stage:'under-contract',value:3500000,level:4,lat:34.0,lng:-81.0},
+      {id:'d1',name:'Greenville Ind. Park — Ph 1',location:'Greenville, SC',size:'±85 ac',type:'dev',stage:'under-contract',value:2200000,level:4,lat:34.5,lng:-82.3,projectId:'p2'},
+      {id:'d2',name:'Columbia Mixed-Use',location:'Columbia, SC',size:'infill block',type:'dev',stage:'under-contract',value:3500000,level:4,lat:34.0,lng:-81.0,projectId:'p1'},
       {id:'d3',name:'Charleston warehouse',location:'Charleston, SC',size:'85k sf · lease',type:'brok',stage:'lease-sale',value:850000,level:3,lat:32.8,lng:-79.9},
       {id:'d4',name:'Charlotte Uptown sublease',location:'Charlotte, NC',size:'9k sf',type:'brok',stage:'lease-sale',value:300000,level:3,lat:35.2,lng:-80.8},
       {id:'d5',name:'Raleigh retail pad',location:'Raleigh, NC',size:'sale',type:'brok',stage:'lease-sale',value:1600000,level:3,lat:35.7,lng:-78.6},
-      {id:'d6',name:'Wilmington land assemblage',location:'Wilmington, NC',size:'±18 ac',type:'dev',stage:'prelim',value:2400000,level:1,lat:34.2,lng:-77.9},
+      {id:'d6',name:'Wilmington land assemblage',location:'Wilmington, NC',size:'±18 ac',type:'dev',stage:'prelim',value:2400000,level:1,lat:34.2,lng:-77.9,projectId:'p3'},
       {id:'d7',name:'Spartanburg flex lease',location:'Spartanburg, SC',size:'22k sf',type:'brok',stage:'loi',value:600000,level:2,lat:34.9,lng:-81.9},
       {id:'d8',name:'N. Charleston bulk WH',location:'Charleston, SC',size:'120k sf',type:'brok',stage:'prelim',value:1100000,level:1,lat:33.0,lng:-80.0},
       {id:'d9',name:'Columbia parcel B',location:'Columbia, SC',size:'infill',type:'dev',stage:'prelim',value:900000,level:1,lat:34.1,lng:-81.1},
@@ -685,9 +724,9 @@ function defaultState() {
       {id:'c7',ini:'TH',name:'T. Hayes',company:'Carolinas Bank',role:'Lender',type:'Lender',phone:'(704) 555-0129',email:'thayes@carolinasbank.com',lastContact:'2026-05-12',followUpDate:'2026-06-20',followUpNote:'Permanent financing options',linkedDeals:['d1'],log:[{date:'2026-05-12',type:'call',note:'Permanent financing options for Greenville.'}]},
     ],
     projects: [
-      {id:'p1',name:'Columbia Mixed-Use',type:'dev',phase:'Entitlements',nextMilestone:'draw #3',progress:42},
-      {id:'p2',name:'Greenville Ind. Park',type:'dev',phase:'Site work',nextMilestone:'permits',progress:64},
-      {id:'p3',name:'Wilmington Waterfront',type:'dev',phase:'Pre-development',nextMilestone:'zoning',progress:18},
+      {id:'p1',name:'Columbia Mixed-Use',type:'dev',phase:'Entitlements',nextMilestone:'draw #3',progress:42,location:'Columbia, SC',budget:8500000,notes:'Mixed-use infill redevelopment. Residential + retail ground floor.'},
+      {id:'p2',name:'Greenville Ind. Park',type:'dev',phase:'Site work',nextMilestone:'permits',progress:64,location:'Greenville, SC',budget:12000000,notes:'Industrial park phase 1 along I-85 corridor. 3 buildings planned.'},
+      {id:'p3',name:'Wilmington Waterfront',type:'dev',phase:'Pre-development',nextMilestone:'zoning',progress:18,location:'Wilmington, NC',budget:5200000,notes:'Waterfront land assemblage. Mixed-use zoning approval pending.'},
     ],
     news: [
       {geo:'York County',outlet:'Herald',hl:'Rock Hill industrial corridor sees record lease absorption in Q1'},
@@ -1017,14 +1056,120 @@ function renderKPIs() {
 // PROJECTS PANEL
 // ============================================================
 function renderProjects() {
+  // Right-rail summary (This Week tab)
   const panel = document.getElementById('projectsPanel');
-  panel.innerHTML = STATE.projects.map(p => `
-    <div class="proj-item">
-      <div class="pt"><span class="pn">${p.name}</span><span class="tag ${p.type}">${p.type==='dev'?'Dev':'Brok'}</span></div>
-      <div class="pm">${p.phase} · next: ${p.nextMilestone}</div>
-      <div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div>
-    </div>
-  `).join('');
+  if (panel) {
+    panel.innerHTML = STATE.projects.slice(0,4).map(p => `
+      <div class="proj-item" style="cursor:pointer" onclick="showTab('projects')">
+        <div class="pt"><span class="pn">${p.name}</span><span class="tag ${p.type}">${p.type==='dev'?'Dev':'Brok'}</span></div>
+        <div class="pm">${p.phase} · next: ${p.nextMilestone}</div>
+        <div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div>
+      </div>
+    `).join('') + (STATE.projects.length > 4 ? `<div style="padding:8px 0;font-size:12px;color:var(--ink-3);text-align:center;cursor:pointer" onclick="showTab('projects')">+ ${STATE.projects.length-4} more projects →</div>` : '');
+  }
+  // Full Projects tab
+  renderProjectsTab();
+}
+
+function renderProjectsTab() {
+  const grid = document.getElementById('projectsGrid');
+  if (!grid) return;
+  const projFilterBrok = STATE.projFilterBrok !== false;
+  const projFilterDev  = STATE.projFilterDev  !== false;
+  let projs = STATE.projects.filter(p =>
+    (p.type === 'brok' && projFilterBrok) || (p.type === 'dev' && projFilterDev)
+  );
+  document.getElementById('tab-projects-count').textContent = STATE.projects.length;
+  document.getElementById('proj-summary').textContent = `${STATE.projects.length} projects · ${STATE.projects.filter(p=>p.type==='dev').length} dev · ${STATE.projects.filter(p=>p.type==='brok').length} brok`;
+
+  if (!projs.length) {
+    grid.innerHTML = '<div class="proj-empty" style="grid-column:1/-1">No projects yet. Click + New project to get started.</div>';
+    return;
+  }
+  grid.innerHTML = projs.map(p => {
+    // Linked deals
+    const linkedDeals = STATE.deals.filter(d => d.projectId === p.id);
+    const dealsHtml = linkedDeals.length ? linkedDeals.map(d => {
+      const stageLabel = STAGES.find(s=>s.id===d.stage)?.label || d.stage;
+      return `<div class="proj-deal-row">
+        <span class="tag ${d.type}" style="flex-shrink:0">${d.type==='brok'?'Brok':'Dev'}</span>
+        <span class="dname">${d.name}</span>
+        <span class="dstage">${stageLabel}</span>
+        <span class="dval">${fmtMoney(d.value)}</span>
+      </div>`;
+    }).join('') : '<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No deals linked yet — edit a deal to link it here.</div>';
+
+    // Tasks for this project
+    const projTasks = STATE.tasks.filter(t => t.projectId === p.name || t.projectId === p.id);
+    const openTasks = projTasks.filter(t=>!t.done);
+    const doneTasks = projTasks.filter(t=>t.done);
+    const tasksHtml = projTasks.length ? projTasks.slice(0,5).map(t => `
+      <div class="proj-task-row">
+        <span class="cbx-sm ${t.done?'on':''}"></span>
+        <span style="${t.done?'color:var(--ink-3);text-decoration:line-through':''}; flex:1">${t.title}</span>
+        <span class="badge ${t.dueType||'time'}" style="font-size:10px">${t.dueBadge||fmtDisplay(t.day)}</span>
+      </div>`).join('') + (projTasks.length>5?`<div style="font-size:11px;color:var(--ink-3);padding-top:4px">+${projTasks.length-5} more tasks</div>`:'')
+    : '<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No tasks yet.</div>';
+
+    const totalValue = linkedDeals.reduce((s,d)=>s+d.value,0);
+    return `
+    <div class="proj-card ${p.type}">
+      <div class="proj-card-h">
+        <div>
+          <div class="pname">${p.name}</div>
+          <div style="display:flex;gap:8px;align-items:center;margin-top:5px;">
+            <span class="tag ${p.type}">${p.type==='dev'?'Development':'Brokerage'}</span>
+            ${p.location ? `<span style="font-size:12px;color:var(--ink-3)">${p.location}</span>` : ''}
+          </div>
+        </div>
+        <div class="pactions">
+          <button class="btn sm" onclick="openModal('project',STATE.projects.find(x=>x.id==='${p.id}'))">Edit</button>
+          <button class="btn sm danger" onclick="deleteProject('${p.id}')">✕</button>
+        </div>
+      </div>
+      <div class="proj-meta">
+        <span style="font-weight:500">${p.phase}</span> · Next: ${p.nextMilestone}
+        ${p.budget ? ` · Budget: ${fmtMoney(p.budget)}` : ''}
+        ${totalValue ? ` · Deal value: ${fmtMoney(totalValue)}` : ''}
+      </div>
+      ${p.notes ? `<div style="padding:0 16px 10px;font-size:12.5px;color:var(--ink-2);font-style:italic">${p.notes}</div>` : ''}
+      <div class="proj-progress">
+        <div class="bar-label"><span>Progress</span><span style="font-family:var(--mono);font-weight:600">${p.progress}%</span></div>
+        <div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div>
+      </div>
+      <div class="proj-deals-section">
+        <div class="pdeal-h">Linked deals (${linkedDeals.length})</div>
+        ${dealsHtml}
+        <div style="margin-top:8px;">
+          <button class="btn sm" onclick="openModal('deal',{projectId:'${p.id}',type:'${p.type}'})" style="font-size:11.5px">+ Link new deal</button>
+        </div>
+      </div>
+      <div class="proj-tasks-section">
+        <div class="ptask-h">Tasks (${openTasks.length} open · ${doneTasks.length} done)</div>
+        ${tasksHtml}
+        <div style="margin-top:8px;">
+          <button class="btn sm" onclick="openAddTask('${new Date().toISOString().slice(0,10)}','${p.name}')" style="font-size:11.5px">+ Add task</button>
+        </div>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function toggleProjFilter(type) {
+  if (type==='brok') STATE.projFilterBrok = !(STATE.projFilterBrok !== false);
+  else STATE.projFilterDev = !(STATE.projFilterDev !== false);
+  saveState();
+  document.getElementById('proj-filter-brok').classList.toggle('on', STATE.projFilterBrok !== false);
+  document.getElementById('proj-filter-dev').classList.toggle('on', STATE.projFilterDev  !== false);
+  renderProjectsTab();
+}
+
+function deleteProject(id) {
+  if (!confirm('Delete this project? Linked deals will be unlinked but not deleted.')) return;
+  STATE.deals.forEach(d => { if (d.projectId === id) delete d.projectId; });
+  STATE.projects = STATE.projects.filter(x=>x.id!==id);
+  saveState(); renderProjects(); renderDeals();
+  toast('Project deleted.');
 }
 
 // ============================================================
@@ -1269,12 +1414,13 @@ function openModal(type, data={}) {
   if (type === 'task') box.innerHTML = taskModalHTML(data);
   else if (type === 'deal') box.innerHTML = dealModalHTML(data);
   else if (type === 'contact') box.innerHTML = contactModalHTML(data);
+  else if (type === 'project') box.innerHTML = projectModalHTML(data);
   else if (type === 'quickadd') box.innerHTML = quickAddHTML();
 }
 function closeModal() {
   document.getElementById('modalBackdrop').style.display = 'none';
 }
-function openAddTask(dayStr) { openModal('task',{day:dayStr}); }
+function openAddTask(dayStr, projName='') { openModal('task',{day:dayStr, projectId:projName}); }
 function openEditDeal(id) {
   const d = STATE.deals.find(x=>x.id===id);
   if (d) openModal('deal',d);
@@ -1381,6 +1527,12 @@ function dealModalHTML(data={}) {
           </select>
         </div>
       </div>
+      <div class="form-row"><label>Link to project (optional)</label>
+        <select id="f-dproject">
+          <option value="">— standalone deal —</option>
+          ${STATE.projects.map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}
+        </select>
+      </div>
       ${data.stage==='closed'?`<div class="form-row"><label>Commission ($)</label><input id="f-dfee" type="number" value="${data.fee||''}" placeholder="42000"/></div>`:''}
     </div>
     <div class="modal-footer">
@@ -1400,11 +1552,13 @@ function saveDeal(existingId) {
   const level = parseInt(document.getElementById('f-dlevel').value)||0;
   const feeEl = document.getElementById('f-dfee');
   const fee = feeEl ? parseInt(feeEl.value)||0 : 0;
+  const projEl = document.getElementById('f-dproject');
+  const projectId = projEl ? projEl.value : '';
   if (existingId) {
     const d = STATE.deals.find(x=>x.id===existingId);
-    if (d) Object.assign(d,{name,type,stage,location,size,value,level,fee});
+    if (d) Object.assign(d,{name,type,stage,location,size,value,level,fee,projectId});
   } else {
-    STATE.deals.push({id:uid(),name,type,stage,location,size,value,level,fee});
+    STATE.deals.push({id:uid(),name,type,stage,location,size,value,level,fee,projectId});
   }
   saveState(); closeModal(); renderDeals(); renderKPIs(); renderMap();
   toast(existingId ? 'Deal updated.' : 'Deal added.');
@@ -1480,6 +1634,69 @@ function deleteContactById(id) {
   toast('Contact deleted.');
 }
 
+function projectModalHTML(data={}) {
+  return `
+    <div class="modal-h"><h3>${data.id?'Edit project':'New project'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-b">
+      <div class="form-row"><label>Project name</label><input id="f-pname" type="text" value="${data.name||''}" placeholder="e.g. Rock Hill Distribution Center"/></div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Type</label>
+          <select id="f-ptype">
+            <option value="dev" ${data.type==='dev'||!data.type?'selected':''}>Development</option>
+            <option value="brok" ${data.type==='brok'?'selected':''}>Brokerage</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin:0"><label>Location</label>
+          <input id="f-ploc" type="text" value="${data.location||''}" placeholder="e.g. York County, SC"/>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Current phase</label>
+          <input id="f-pphase" type="text" value="${data.phase||''}" placeholder="e.g. Entitlements"/>
+        </div>
+        <div class="form-row" style="margin:0"><label>Next milestone</label>
+          <input id="f-pmilestone" type="text" value="${data.nextMilestone||''}" placeholder="e.g. permits"/>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Progress (0–100%)</label>
+          <input id="f-pprogress" type="number" min="0" max="100" value="${data.progress||0}" placeholder="42"/>
+        </div>
+        <div class="form-row" style="margin:0"><label>Total budget ($)</label>
+          <input id="f-pbudget" type="number" value="${data.budget||''}" placeholder="5000000"/>
+        </div>
+      </div>
+      <div class="form-row"><label>Notes</label>
+        <textarea id="f-pnotes" rows="3" style="resize:vertical" placeholder="Brief description of the project…">${data.notes||''}</textarea>
+      </div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteProject('${data.id}');closeModal()">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveProject('${data.id||''}')">Save project</button>
+    </div>`;
+}
+
+function saveProject(existingId) {
+  const name = document.getElementById('f-pname').value.trim();
+  if (!name) { toast('Please enter a project name.'); return; }
+  const type = document.getElementById('f-ptype').value;
+  const location = document.getElementById('f-ploc').value.trim();
+  const phase = document.getElementById('f-pphase').value.trim();
+  const nextMilestone = document.getElementById('f-pmilestone').value.trim();
+  const progress = Math.min(100, Math.max(0, parseInt(document.getElementById('f-pprogress').value)||0));
+  const budget = parseInt(document.getElementById('f-pbudget').value)||0;
+  const notes = document.getElementById('f-pnotes').value.trim();
+  if (existingId) {
+    const p = STATE.projects.find(x=>x.id===existingId);
+    if (p) Object.assign(p,{name,type,location,phase,nextMilestone,progress,budget,notes});
+  } else {
+    STATE.projects.push({id:uid(),name,type,location,phase,nextMilestone,progress,budget,notes});
+  }
+  saveState(); closeModal(); renderProjects(); renderDeals();
+  toast(existingId ? 'Project updated.' : 'Project added.');
+}
+
 function quickAddHTML() {
   return `
     <div class="modal-h"><h3>Quick add</h3><button class="modal-close" onclick="closeModal()">×</button></div>
@@ -1498,6 +1715,11 @@ function quickAddHTML() {
         <div style="font-size:28px;margin-bottom:8px;">👤</div>
         <div style="font-weight:600;font-size:14px;">Contact</div>
         <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to CRM</div>
+      </div>
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('project',{})">
+        <div style="font-size:28px;margin-bottom:8px;">📁</div>
+        <div style="font-weight:600;font-size:14px;">Project</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">New long-term project</div>
       </div>
     </div>
     <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button></div>`;
@@ -1585,6 +1807,8 @@ function init() {
   renderKPIs();
   renderProjects();
   renderFollowups();
+  document.getElementById('proj-filter-brok').classList.toggle('on', STATE.projFilterBrok !== false);
+  document.getElementById('proj-filter-dev').classList.toggle('on', STATE.projFilterDev !== false);
   renderDeals();
   renderContacts();
   renderMap();
