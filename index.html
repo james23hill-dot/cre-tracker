@@ -362,6 +362,25 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 .proj-task-row .cbx-sm{width:13px;height:13px;border:1.5px solid var(--ink-3);border-radius:3px;flex-shrink:0;}
 .proj-empty{padding:20px;text-align:center;color:var(--ink-3);font-size:13px;}
 
+
+/* === IMPORTANCE DOTS === */
+.imp{display:inline-flex;gap:3px;align-items:center;flex-shrink:0;}
+.imp span{width:7px;height:7px;border-radius:50%;background:var(--surface-3);}
+.imp span.on{background:var(--ink-3);}
+.imp.i1 span.on{background:var(--good);}
+.imp.i2 span.on{background:var(--good);}
+.imp.i3 span.on{background:var(--warn);}
+.imp.i4 span.on{background:var(--danger);}
+.imp.i5 span.on{background:var(--danger);}
+.task .contact-link{font-size:11px;color:var(--brok);background:var(--brok-soft);padding:1px 7px;border-radius:5px;cursor:pointer;}
+.task .contact-link:hover{text-decoration:underline;}
+.imp-picker{display:flex;gap:6px;align-items:center;}
+.imp-picker button{width:32px;height:32px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);font-size:13px;font-weight:600;color:var(--ink-2);transition:all .1s;}
+.imp-picker button:hover{border-color:var(--ink-3);color:var(--ink);}
+.imp-picker button.sel{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.imp-picker button[data-v="4"].sel,.imp-picker button[data-v="5"].sel{background:var(--danger);border-color:var(--danger);}
+.imp-picker button[data-v="3"].sel{background:var(--warn);border-color:var(--warn);}
+.imp-picker button[data-v="1"].sel,.imp-picker button[data-v="2"].sel{background:var(--good);border-color:var(--good);}
 /* === LOGIN SCREEN === */
 .login-screen{position:fixed;inset:0;background:var(--paper);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .login-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-2);width:100%;max-width:400px;padding:40px;}
@@ -950,20 +969,28 @@ function renderWeek() {
   grid.innerHTML = days.map((d,i) => {
     const ds = fmt(d);
     const isToday = ds === todayS;
-    const dayTasks = STATE.tasks.filter(t => t.day === ds);
+    const dayTasks = STATE.tasks.filter(t => t.day === ds).sort((a,b)=>(b.importance||3)-(a.importance||3));
     const tasksHtml = dayTasks.map(t => {
       const hide = (!STATE.filterBrok && t.type==='brok') || (!STATE.filterDev && t.type==='dev') ? 'hide' : '';
       const over = t.dueType === 'over' ? 'is-over' : '';
       const badge = t.dueBadge ? `<span class="badge ${t.dueType}">${t.dueBadge}</span>` : '';
+      const imp = t.importance || 3;
+      const impDots = `<span class="imp i${imp}" title="Importance: ${imp}/5">${[1,2,3,4,5].map(n=>`<span class="${n<=imp?'on':''}"></span>`).join('')}</span>`;
+      const contactEl = t.contactId ? (() => { const c = STATE.contacts.find(x=>x.id===t.contactId); return c ? `<span class="contact-link" onclick="showTab('contacts');setTimeout(()=>selectContact('${c.id}'),100);event.stopPropagation()" title="Linked contact">👤 ${c.name}</span>` : ''; })() : '';
       return `
-        <div class="task ${t.type} ${t.done?'done':''} ${over} ${hide}" data-tid="${t.id}">
+        <div class="task ${t.type} ${t.done?'done':''} ${over} ${hide}" data-tid="${t.id}" ondblclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'))">
           <div class="ttop">
             <span class="cbx ${t.done?'on':''}" onclick="toggleTask('${t.id}',event)"></span>
             <span class="ttl">${t.title}</span>
-            <span class="task-actions"><button onclick="deleteTask('${t.id}',event)" title="Delete">✕</button></span>
+            <span class="task-actions">
+              ${impDots}
+              <button onclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'));event.stopPropagation()" title="Edit" style="color:var(--ink-3);font-size:12px;padding:2px 4px;background:none;border:none;border-radius:4px;">✎</button>
+              <button onclick="deleteTask('${t.id}',event)" title="Delete">✕</button>
+            </span>
           </div>
           <div class="tmeta">
             ${t.projectId ? `<span class="tproj">${t.projectId}</span>` : ''}
+            ${contactEl}
             ${badge}
           </div>
         </div>`;
@@ -1433,16 +1460,33 @@ function openEditContact(id) {
 function openQuickAdd() { openModal('quickadd'); }
 function openSearch() { showTab('contacts'); document.getElementById('contactSearch').focus(); }
 
+function impPickerHTML(val) {
+  const labels = ['','Low','Low-Med','Medium','High','Critical'];
+  return `<div class="imp-picker" id="impPicker">
+    ${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" class="${(val||3)===n?'sel':''}" onclick="selectImp(${n})" title="${labels[n]}">${n}</button>`).join('')}
+    <span id="impLabel" style="font-size:12px;color:var(--ink-3);margin-left:4px">${labels[val||3]}</span>
+  </div>
+  <input type="hidden" id="f-importance" value="${val||3}"/>`;
+}
+function selectImp(n) {
+  document.getElementById('f-importance').value = n;
+  document.querySelectorAll('#impPicker button').forEach(b => b.classList.toggle('sel', parseInt(b.dataset.v)===n));
+  const labels = ['','Low','Low-Med','Medium','High','Critical'];
+  document.getElementById('impLabel').textContent = labels[n];
+}
+
 function taskModalHTML(data={}) {
   const days = [];
   const mon = currentWeekMonday();
   for(let i=0;i<5;i++){const d=new Date(mon);d.setDate(d.getDate()+i);days.push({val:fmt(d),label:d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});}
   const daysOptions = days.map(d=>`<option value="${d.val}" ${data.day===d.val?'selected':''}>${d.label}</option>`).join('');
-  const projectOpts = [...new Set(STATE.deals.map(d=>d.name)),...new Set(STATE.tasks.map(t=>t.projectId))].filter(Boolean).map(p=>`<option value="${p}" ${data.projectId===p?'selected':''}>${p}</option>`).join('');
+  const projectOpts = [...new Set(STATE.projects.map(p=>p.name)),...new Set(STATE.deals.map(d=>d.name))].filter(Boolean).map(p=>`<option value="${p}" ${data.projectId===p?'selected':''}>${p}</option>`).join('');
+  const contactOpts = STATE.contacts.map(c=>`<option value="${c.id}" ${data.contactId===c.id?'selected':''}>${c.name} — ${c.company}</option>`).join('');
   return `
     <div class="modal-h"><h3>${data.id?'Edit task':'Add task'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-b">
-      <div class="form-row"><label>Task title</label><input id="f-title" type="text" value="${data.title||''}" placeholder="e.g. Call back J. Mercer" /></div>
+      <div class="form-row"><label>Task title</label><input id="f-title" type="text" value="${data.title||''}" placeholder="e.g. Call back J. Mercer" autofocus/></div>
+      <div class="form-row"><label>Importance</label>${impPickerHTML(data.importance||3)}</div>
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label>Type</label>
           <select id="f-type">
@@ -1459,6 +1503,23 @@ function taskModalHTML(data={}) {
         <div class="form-row" style="margin:0"><label>Project / deal</label>
           <select id="f-proj"><option value="">— none —</option>${projectOpts}</select>
         </div>
+      </div>
+      <div class="form-row"><label>Contact (optional — for follow-up tracking)</label>
+        <select id="f-contact">
+          <option value="">— no contact —</option>
+          ${contactOpts}
+        </select>
+      </div>
+      <div class="form-row"><label>Follow-up needed?</label>
+        <select id="f-followup">
+          <option value="" ${!data.followupAfter?'selected':''}>No follow-up</option>
+          <option value="1" ${data.followupAfter==='1'?'selected':''}>Follow up in 1 day</option>
+          <option value="2" ${data.followupAfter==='2'?'selected':''}>Follow up in 2 days</option>
+          <option value="3" ${data.followupAfter==='3'?'selected':''}>Follow up in 3 days</option>
+          <option value="5" ${data.followupAfter==='5'?'selected':''}>Follow up in 5 days</option>
+          <option value="7" ${data.followupAfter==='7'?'selected':''}>Follow up in 1 week</option>
+          <option value="14" ${data.followupAfter==='14'?'selected':''}>Follow up in 2 weeks</option>
+        </select>
       </div>
       <div class="form-row"><label>Status badge (optional)</label>
         <select id="f-dueType">
@@ -1484,14 +1545,27 @@ function saveTask(existingId) {
   const time = document.getElementById('f-time').value.trim();
   const proj = document.getElementById('f-proj').value;
   const dueType = document.getElementById('f-dueType').value;
+  const importance = parseInt(document.getElementById('f-importance').value) || 3;
+  const contactId = document.getElementById('f-contact').value;
+  const followupAfter = document.getElementById('f-followup').value;
+  // If contact + follow-up selected, update that contact's follow-up date
+  if (contactId && followupAfter) {
+    const c = STATE.contacts.find(x=>x.id===contactId);
+    if (c) {
+      const fuDate = new Date();
+      fuDate.setDate(fuDate.getDate() + parseInt(followupAfter));
+      c.followUpDate = fmt(fuDate);
+      c.followUpNote = `Follow-up from task: ${title}`;
+    }
+  }
   if (existingId) {
     const t = STATE.tasks.find(x=>x.id===existingId);
-    if (t) Object.assign(t,{title,type,day,time,projectId:proj,dueType,dueBadge:time||''});
+    if (t) Object.assign(t,{title,type,day,time,projectId:proj,dueType,dueBadge:time||'',importance,contactId,followupAfter});
   } else {
-    STATE.tasks.push({id:uid(),title,type,day,time,projectId:proj,dueType,dueBadge:time||'',done:false});
+    STATE.tasks.push({id:uid(),title,type,day,time,projectId:proj,dueType,dueBadge:time||'',done:false,importance,contactId,followupAfter});
   }
-  saveState(); closeModal(); renderWeek(); renderKPIs();
-  toast(existingId ? 'Task updated.' : 'Task added.');
+  saveState(); closeModal(); renderWeek(); renderKPIs(); renderFollowups(); renderContacts();
+  toast(existingId ? 'Task updated.' : 'Task added.' + (contactId && followupAfter ? ' Follow-up scheduled.' : ''));
 }
 function deleteTaskById(id) {
   if (!confirm('Delete task?')) return;
