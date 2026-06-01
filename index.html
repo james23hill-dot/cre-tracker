@@ -1265,6 +1265,7 @@ function renderDeals() {
           <div class="ds">${d.location} · ${d.size||'—'}</div>
           <div class="dval">${fmtMoney(d.value)}</div>
           <div class="df"><span class="level ${levelCls}">${bars}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>
+        ${(() => { const cc = STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(d.id)); return cc.length ? `<div style="margin-top:7px;font-size:11px;color:var(--ink-3)">👤 ${cc.map(c=>c.name).join(', ')}</div>` : ''; })()}
         </div>`;
     }).join('');
     return `
@@ -1325,7 +1326,14 @@ function renderContactDetail(id) {
   const deals = (c.linkedDeals||[]).map(did => {
     const d = STATE.deals.find(x=>x.id===did);
     if (!d) return '';
-    return `<div class="link"><span style="font-size:13px">${d.name}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>`;
+    const stageLabel = STAGES.find(s=>s.id===d.stage)?.label || d.stage;
+    return `<div class="link" style="cursor:pointer" onclick="showTab('deals');setTimeout(()=>openEditDeal('${did}'),100)">
+      <span style="font-size:13px;font-weight:500">${d.name}</span>
+      <div style="display:flex;gap:6px;align-items:center">
+        <span style="font-size:11.5px;color:var(--ink-3)">${stageLabel}</span>
+        <span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span>
+      </div>
+    </div>`;
   }).join('');
   const log = (c.log||[]).map(l => `<div class="logitem"><div class="when">${fmtDisplay(l.date)} · ${l.type}</div>${l.note}</div>`).join('');
   panel.innerHTML = `
@@ -1576,10 +1584,13 @@ function deleteTaskById(id) {
 
 function dealModalHTML(data={}) {
   const stageOpts = STAGES.map(s=>`<option value="${s.id}" ${data.stage===s.id?'selected':''}>${s.label}</option>`).join('');
+  // Build contact options — pre-select any contacts already linked to this deal
+  const linkedContactIds = data.id ? STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(data.id)).map(c=>c.id) : [];
+  const contactOpts = STATE.contacts.map(c=>`<option value="${c.id}" ${linkedContactIds.includes(c.id)?'selected':''}>${c.name} — ${c.company} (${c.role})</option>`).join('');
   return `
     <div class="modal-h"><h3>${data.id?'Edit deal':'Add deal'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-b">
-      <div class="form-row"><label>Deal name</label><input id="f-dname" type="text" value="${data.name||''}" placeholder="e.g. Rock Hill Distribution Center"/></div>
+      <div class="form-row"><label>Deal name</label><input id="f-dname" type="text" value="${data.name||''}" placeholder="e.g. Rock Hill Distribution Center" autofocus/></div>
       <div class="form-row-2">
         <div class="form-row" style="margin:0"><label>Type</label>
           <select id="f-dtype">
@@ -1593,19 +1604,20 @@ function dealModalHTML(data={}) {
         <div class="form-row" style="margin:0"><label>Location</label><input id="f-dloc" type="text" value="${data.location||''}" placeholder="e.g. York County, SC"/></div>
         <div class="form-row" style="margin:0"><label>Size / desc</label><input id="f-dsize" type="text" value="${data.size||''}" placeholder="e.g. 45k sf · lease"/></div>
       </div>
-      <div class="form-row-2">
-        <div class="form-row" style="margin:0"><label>Deal value ($)</label><input id="f-dval" type="number" value="${data.value||''}" placeholder="2000000"/></div>
-        <div class="form-row" style="margin:0"><label>Heat (0–4)</label>
-          <select id="f-dlevel">
-            ${[0,1,2,3,4].map(n=>`<option value="${n}" ${data.level===n?'selected':''}>${n} — ${['None','Cold','Warm','Hot','Max'][n]}</option>`).join('')}
-          </select>
-        </div>
+      <div class="form-row"><label>Heat level</label>
+        <select id="f-dlevel">
+          ${[0,1,2,3,4].map(n=>`<option value="${n}" ${data.level===n?'selected':''}>${n} — ${['None','Cold','Warm','Hot','Max'][n]}</option>`).join('')}
+        </select>
       </div>
       <div class="form-row"><label>Link to project (optional)</label>
         <select id="f-dproject">
           <option value="">— standalone deal —</option>
           ${STATE.projects.map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}
         </select>
+      </div>
+      <div class="form-row">
+        <label>Linked contacts <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">(hold Ctrl / Cmd to select multiple)</span></label>
+        <select id="f-dcontacts" multiple style="height:110px;">${contactOpts}</select>
       </div>
       ${data.stage==='closed'?`<div class="form-row"><label>Commission ($)</label><input id="f-dfee" type="number" value="${data.fee||''}" placeholder="42000"/></div>`:''}
     </div>
@@ -1622,20 +1634,35 @@ function saveDeal(existingId) {
   const stage = document.getElementById('f-dstage').value;
   const location = document.getElementById('f-dloc').value.trim();
   const size = document.getElementById('f-dsize').value.trim();
-  const value = parseInt(document.getElementById('f-dval').value)||0;
   const level = parseInt(document.getElementById('f-dlevel').value)||0;
   const feeEl = document.getElementById('f-dfee');
   const fee = feeEl ? parseInt(feeEl.value)||0 : 0;
   const projEl = document.getElementById('f-dproject');
   const projectId = projEl ? projEl.value : '';
+  // Two-way contact sync
+  const contactsEl = document.getElementById('f-dcontacts');
+  const selectedContactIds = contactsEl ? Array.from(contactsEl.selectedOptions).map(o=>o.value) : [];
+  const dealId = existingId || uid();
+  // Remove this deal from all contacts first, then re-add to selected ones
+  STATE.contacts.forEach(c => {
+    c.linkedDeals = (c.linkedDeals||[]).filter(id => id !== dealId);
+  });
+  selectedContactIds.forEach(cid => {
+    const c = STATE.contacts.find(x=>x.id===cid);
+    if (c) {
+      if (!c.linkedDeals) c.linkedDeals = [];
+      if (!c.linkedDeals.includes(dealId)) c.linkedDeals.push(dealId);
+    }
+  });
   if (existingId) {
     const d = STATE.deals.find(x=>x.id===existingId);
-    if (d) Object.assign(d,{name,type,stage,location,size,value,level,fee,projectId});
+    if (d) Object.assign(d,{name,type,stage,location,size,level,fee,projectId});
   } else {
-    STATE.deals.push({id:uid(),name,type,stage,location,size,value,level,fee,projectId});
+    STATE.deals.push({id:dealId,name,type,stage,location,size,level,fee,projectId,value:0});
   }
-  saveState(); closeModal(); renderDeals(); renderKPIs(); renderMap();
-  toast(existingId ? 'Deal updated.' : 'Deal added.');
+  saveState(); closeModal(); renderDeals(); renderKPIs(); renderMap(); renderContacts(); renderContactDetail(STATE.selectedContact);
+  const contactCount = selectedContactIds.length;
+  toast(existingId ? `Deal updated${contactCount?' · '+contactCount+' contact'+(contactCount>1?'s':'')+' linked':''}` : `Deal added${contactCount?' · '+contactCount+' contact'+(contactCount>1?'s':'')+' linked':''}`);
 }
 function deleteDeal(id) {
   if (!confirm('Delete this deal?')) return;
