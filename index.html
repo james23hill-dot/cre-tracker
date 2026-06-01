@@ -381,6 +381,20 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 .imp-picker button[data-v="4"].sel,.imp-picker button[data-v="5"].sel{background:var(--danger);border-color:var(--danger);}
 .imp-picker button[data-v="3"].sel{background:var(--warn);border-color:var(--warn);}
 .imp-picker button[data-v="1"].sel,.imp-picker button[data-v="2"].sel{background:var(--good);border-color:var(--good);}
+
+/* === CONTACT AUTOCOMPLETE === */
+.contact-input-wrap{position:relative;}
+.contact-input-wrap input{width:100%;}
+.contact-suggestions{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);box-shadow:var(--sh-2);z-index:200;max-height:180px;overflow-y:auto;}
+.contact-suggestions .sug-item{padding:9px 12px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:8px;}
+.contact-suggestions .sug-item:last-child{border-bottom:none;}
+.contact-suggestions .sug-item:hover{background:var(--surface-2);}
+.contact-suggestions .sug-new{color:var(--brok);font-style:italic;}
+.contact-suggestions .sug-av{width:24px;height:24px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:10px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.contact-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;min-height:0;}
+.contact-tag{display:inline-flex;align-items:center;gap:5px;background:var(--brok-soft);color:var(--brok);border:1px solid var(--brok-line);border-radius:99px;padding:3px 10px 3px 8px;font-size:12.5px;font-weight:500;}
+.contact-tag button{background:none;border:none;color:var(--brok);font-size:14px;line-height:1;padding:0;margin:0;cursor:pointer;opacity:.7;}
+.contact-tag button:hover{opacity:1;}
 /* === LOGIN SCREEN === */
 .login-screen{position:fixed;inset:0;background:var(--paper);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
 .login-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-2);width:100%;max-width:400px;padding:40px;}
@@ -869,6 +883,103 @@ function setDensity(compact) { STATE.density = compact ? 'compact' : 'comfortabl
 function setInitials(v) { STATE.initials = v.toUpperCase().slice(0,2); saveState(); applyTheme(); }
 function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
 
+
+// ============================================================
+// CONTACT AUTOCOMPLETE WIDGET
+// ============================================================
+// selectedDealContacts / selectedTaskContacts hold arrays of {id, name, isNew, company, role}
+let selectedDealContacts = [];
+let selectedTaskContacts = [];
+
+function initContactAutocomplete(inputId, tagsId, storageArr, clearArr) {
+  // clear the array in place
+  clearArr.length = 0;
+  const input = document.getElementById(inputId);
+  const tagsEl = document.getElementById(tagsId);
+  if (!input || !tagsEl) return;
+
+  function renderTags() {
+    tagsEl.innerHTML = clearArr.map((c,i) => `
+      <span class="contact-tag">
+        <span style="width:20px;height:20px;border-radius:50%;background:var(--surface-3);display:inline-grid;place-items:center;font-size:9px;font-weight:600;color:var(--ink-2)">${c.ini||initials(c.name)}</span>
+        ${c.name}${c.isNew?' <em style="font-size:10px;opacity:.7">(new)</em>':''}
+        <button onclick="removeContactTag(${i},'${tagsId}','${inputId}')" type="button">×</button>
+      </span>`).join('');
+  }
+
+  let sugBox = null;
+  function closeSuggestions() { if (sugBox) { sugBox.remove(); sugBox = null; } }
+
+  input.addEventListener('input', () => {
+    const q = input.value.trim().toLowerCase();
+    closeSuggestions();
+    if (!q) return;
+    const existing = STATE.contacts.filter(c =>
+      (c.name.toLowerCase().includes(q) || (c.company||'').toLowerCase().includes(q)) &&
+      !clearArr.find(x=>x.id===c.id)
+    ).slice(0, 6);
+    sugBox = document.createElement('div');
+    sugBox.className = 'contact-suggestions';
+    existing.forEach(c => {
+      const item = document.createElement('div');
+      item.className = 'sug-item';
+      item.innerHTML = `<span class="sug-av">${c.ini||initials(c.name)}</span><div><div style="font-weight:500">${c.name}</div><div style="font-size:11.5px;color:var(--ink-3)">${c.company} · ${c.role}</div></div>`;
+      item.onclick = () => { clearArr.push({id:c.id,name:c.name,ini:c.ini||initials(c.name),isNew:false}); input.value=''; closeSuggestions(); renderTags(); };
+      sugBox.appendChild(item);
+    });
+    // "Create new" option
+    const newItem = document.createElement('div');
+    newItem.className = 'sug-item sug-new';
+    newItem.innerHTML = `<span class="sug-av" style="background:var(--brok-soft);color:var(--brok)">+</span><div>Create "<strong>${input.value.trim()}</strong>" as new contact</div>`;
+    newItem.onclick = () => {
+      const name = input.value.trim();
+      clearArr.push({id:null,name,ini:initials(name),isNew:true,company:'',role:''});
+      input.value=''; closeSuggestions(); renderTags();
+    };
+    sugBox.appendChild(newItem);
+    input.parentElement.appendChild(sugBox);
+  });
+
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter') { e.preventDefault(); if (sugBox) sugBox.querySelector('.sug-item')?.click(); }
+    if (e.key === 'Escape') closeSuggestions();
+  });
+  document.addEventListener('click', e => { if (!input.parentElement.contains(e.target)) closeSuggestions(); }, {once:false});
+  renderTags();
+}
+
+function removeContactTag(idx, tagsId, inputId) {
+  // figure out which array from the tagsId
+  const arr = tagsId === 'dealContactTags' ? selectedDealContacts : selectedTaskContacts;
+  arr.splice(idx, 1);
+  document.getElementById(tagsId).innerHTML = '';
+  initContactAutocomplete(inputId, tagsId, arr, arr);
+  // re-render without re-initialising event listeners (just re-render tags)
+  const tagsEl = document.getElementById(tagsId);
+  tagsEl.innerHTML = arr.map((c,i) => `
+    <span class="contact-tag">
+      <span style="width:20px;height:20px;border-radius:50%;background:var(--surface-3);display:inline-grid;place-items:center;font-size:9px;font-weight:600;color:var(--ink-2)">${c.ini||initials(c.name)}</span>
+      ${c.name}${c.isNew?' <em style="font-size:10px;opacity:.7">(new)</em>':''}
+      <button onclick="removeContactTag(${i},'${tagsId}','${inputId}')" type="button">×</button>
+    </span>`).join('');
+}
+
+function saveNewContactsFromArr(arr, dealId) {
+  // Creates any "isNew" contacts and returns all final contact IDs
+  return arr.map(entry => {
+    if (!entry.isNew && entry.id) return entry.id;
+    // Create new contact
+    const newId = uid();
+    STATE.contacts.push({
+      id: newId, name: entry.name, ini: entry.ini || initials(entry.name),
+      company: entry.company || '', role: entry.role || '', type: 'Broker',
+      phone: '', email: '', lastContact: todayStr(), followUpDate: '', followUpNote: '',
+      linkedDeals: dealId ? [dealId] : [], log: []
+    });
+    return newId;
+  });
+}
+
 // ============================================================
 // LOGIN
 // ============================================================
@@ -1263,9 +1374,8 @@ function renderDeals() {
         <div class="deal ${d.type}" onclick="openEditDeal('${d.id}')">
           <div class="dn">${d.name}</div>
           <div class="ds">${d.location} · ${d.size||'—'}</div>
-          <div class="dval">${fmtMoney(d.value)}</div>
           <div class="df"><span class="level ${levelCls}">${bars}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>
-        ${(() => { const cc = STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(d.id)); return cc.length ? `<div style="margin-top:7px;font-size:11px;color:var(--ink-3)">👤 ${cc.map(c=>c.name).join(', ')}</div>` : ''; })()}
+          ${(() => { const cc = STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(d.id)); return cc.length ? `<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px;">${cc.map(c=>`<span style="font-size:11px;background:var(--brok-soft);color:var(--brok);padding:2px 7px;border-radius:99px;font-weight:500">👤 ${c.name}</span>`).join('')}</div>` : ''; })()}
         </div>`;
     }).join('');
     return `
@@ -1512,11 +1622,12 @@ function taskModalHTML(data={}) {
           <select id="f-proj"><option value="">— none —</option>${projectOpts}</select>
         </div>
       </div>
-      <div class="form-row"><label>Contact (optional — for follow-up tracking)</label>
-        <select id="f-contact">
-          <option value="">— no contact —</option>
-          ${contactOpts}
-        </select>
+      <div class="form-row">
+        <label>Contact (optional — for follow-up tracking)</label>
+        <div class="contact-input-wrap">
+          <input type="text" id="taskContactInput" placeholder="Type a name to search or add…" autocomplete="off"/>
+        </div>
+        <div class="contact-tags" id="taskContactTags"></div>
       </div>
       <div class="form-row"><label>Follow-up needed?</label>
         <select id="f-followup">
@@ -1544,6 +1655,11 @@ function taskModalHTML(data={}) {
       <button class="btn" onclick="closeModal()">Cancel</button>
       <button class="btn primary" onclick="saveTask('${data.id||''}')">Save task</button>
     </div>`;
+  // Pre-populate if editing
+  selectedTaskContacts = data.contactId
+    ? (() => { const c=STATE.contacts.find(x=>x.id===data.contactId); return c?[{id:c.id,name:c.name,ini:c.ini||initials(c.name),isNew:false}]:[]; })()
+    : [];
+  setTimeout(() => initContactAutocomplete('taskContactInput','taskContactTags',selectedTaskContacts,selectedTaskContacts), 50);
 }
 function saveTask(existingId) {
   const title = document.getElementById('f-title').value.trim();
@@ -1554,9 +1670,11 @@ function saveTask(existingId) {
   const proj = document.getElementById('f-proj').value;
   const dueType = document.getElementById('f-dueType').value;
   const importance = parseInt(document.getElementById('f-importance').value) || 3;
-  const contactId = document.getElementById('f-contact').value;
   const followupAfter = document.getElementById('f-followup').value;
-  // If contact + follow-up selected, update that contact's follow-up date
+  // Save any new contacts from autocomplete, get first contact ID for task
+  const taskContactIds = saveNewContactsFromArr(selectedTaskContacts, null);
+  const contactId = taskContactIds[0] || '';
+  // If contact + follow-up, schedule it
   if (contactId && followupAfter) {
     const c = STATE.contacts.find(x=>x.id===contactId);
     if (c) {
@@ -1572,8 +1690,10 @@ function saveTask(existingId) {
   } else {
     STATE.tasks.push({id:uid(),title,type,day,time,projectId:proj,dueType,dueBadge:time||'',done:false,importance,contactId,followupAfter});
   }
+  const newCount = selectedTaskContacts.filter(c=>c.isNew).length;
+  selectedTaskContacts = [];
   saveState(); closeModal(); renderWeek(); renderKPIs(); renderFollowups(); renderContacts();
-  toast(existingId ? 'Task updated.' : 'Task added.' + (contactId && followupAfter ? ' Follow-up scheduled.' : ''));
+  toast(existingId ? 'Task updated.' : `Task added.${newCount?' '+newCount+' new contact created.':''}${contactId&&followupAfter?' Follow-up scheduled.':''}`);
 }
 function deleteTaskById(id) {
   if (!confirm('Delete task?')) return;
@@ -1584,9 +1704,10 @@ function deleteTaskById(id) {
 
 function dealModalHTML(data={}) {
   const stageOpts = STAGES.map(s=>`<option value="${s.id}" ${data.stage===s.id?'selected':''}>${s.label}</option>`).join('');
-  // Build contact options — pre-select any contacts already linked to this deal
-  const linkedContactIds = data.id ? STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(data.id)).map(c=>c.id) : [];
-  const contactOpts = STATE.contacts.map(c=>`<option value="${c.id}" ${linkedContactIds.includes(c.id)?'selected':''}>${c.name} — ${c.company} (${c.role})</option>`).join('');
+  // Pre-populate selectedDealContacts from existing links
+  selectedDealContacts = data.id
+    ? STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(data.id)).map(c=>({id:c.id,name:c.name,ini:c.ini||initials(c.name),isNew:false}))
+    : [];
   return `
     <div class="modal-h"><h3>${data.id?'Edit deal':'Add deal'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
     <div class="modal-b">
@@ -1616,8 +1737,11 @@ function dealModalHTML(data={}) {
         </select>
       </div>
       <div class="form-row">
-        <label>Linked contacts <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">(hold Ctrl / Cmd to select multiple)</span></label>
-        <select id="f-dcontacts" multiple style="height:110px;">${contactOpts}</select>
+        <label>Contacts — type to search or create new</label>
+        <div class="contact-input-wrap">
+          <input type="text" id="dealContactInput" placeholder="Type a name to search or add…" autocomplete="off"/>
+        </div>
+        <div class="contact-tags" id="dealContactTags"></div>
       </div>
       ${data.stage==='closed'?`<div class="form-row"><label>Commission ($)</label><input id="f-dfee" type="number" value="${data.fee||''}" placeholder="42000"/></div>`:''}
     </div>
@@ -1639,20 +1763,15 @@ function saveDeal(existingId) {
   const fee = feeEl ? parseInt(feeEl.value)||0 : 0;
   const projEl = document.getElementById('f-dproject');
   const projectId = projEl ? projEl.value : '';
-  // Two-way contact sync
-  const contactsEl = document.getElementById('f-dcontacts');
-  const selectedContactIds = contactsEl ? Array.from(contactsEl.selectedOptions).map(o=>o.value) : [];
+  // Two-way contact sync using autocomplete array
   const dealId = existingId || uid();
-  // Remove this deal from all contacts first, then re-add to selected ones
-  STATE.contacts.forEach(c => {
-    c.linkedDeals = (c.linkedDeals||[]).filter(id => id !== dealId);
-  });
-  selectedContactIds.forEach(cid => {
+  // Save any brand-new contacts first and get all IDs
+  const finalContactIds = saveNewContactsFromArr(selectedDealContacts, dealId);
+  // Remove this deal from all contacts, then re-add selected
+  STATE.contacts.forEach(c => { c.linkedDeals = (c.linkedDeals||[]).filter(id => id !== dealId); });
+  finalContactIds.forEach(cid => {
     const c = STATE.contacts.find(x=>x.id===cid);
-    if (c) {
-      if (!c.linkedDeals) c.linkedDeals = [];
-      if (!c.linkedDeals.includes(dealId)) c.linkedDeals.push(dealId);
-    }
+    if (c) { if (!c.linkedDeals) c.linkedDeals=[]; if (!c.linkedDeals.includes(dealId)) c.linkedDeals.push(dealId); }
   });
   if (existingId) {
     const d = STATE.deals.find(x=>x.id===existingId);
@@ -1661,8 +1780,10 @@ function saveDeal(existingId) {
     STATE.deals.push({id:dealId,name,type,stage,location,size,level,fee,projectId,value:0});
   }
   saveState(); closeModal(); renderDeals(); renderKPIs(); renderMap(); renderContacts(); renderContactDetail(STATE.selectedContact);
-  const contactCount = selectedContactIds.length;
-  toast(existingId ? `Deal updated${contactCount?' · '+contactCount+' contact'+(contactCount>1?'s':'')+' linked':''}` : `Deal added${contactCount?' · '+contactCount+' contact'+(contactCount>1?'s':'')+' linked':''}`);
+  const newCount = selectedDealContacts.filter(c=>c.isNew).length;
+  const linkCount = finalContactIds.length;
+  toast(existingId ? `Deal updated · ${linkCount} contact${linkCount!==1?'s':''} linked` : `Deal added · ${linkCount} contact${linkCount!==1?'s':''} linked${newCount?` · ${newCount} new contact${newCount!==1?'s':''} created`:''}`);
+  selectedDealContacts = [];
 }
 function deleteDeal(id) {
   if (!confirm('Delete this deal?')) return;
