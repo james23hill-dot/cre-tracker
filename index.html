@@ -1,0 +1,1446 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-density="comfortable">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CRE HQ · Carolinas Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<style>
+/* ============================================================
+   CRE Tracker — Production
+   IBM Plex Sans (UI) · IBM Plex Mono (figures)
+   ============================================================ */
+:root {
+  --paper:#f4f3ef;--surface:#ffffff;--surface-2:#faf9f6;--surface-3:#f0eee8;
+  --ink:#1e1c19;--ink-2:#6b6760;--ink-3:#9c978d;
+  --line:#e7e4dc;--line-2:#f0eee9;
+  --tint-bg:#ffffff;
+  --brok:#4f82c6;--brok-soft:color-mix(in oklab,var(--brok) 13%,var(--tint-bg));--brok-line:color-mix(in oklab,var(--brok) 38%,var(--tint-bg));
+  --dev:#c08b3e;--dev-soft:color-mix(in oklab,var(--dev) 15%,var(--tint-bg));--dev-line:color-mix(in oklab,var(--dev) 40%,var(--tint-bg));
+  --good:oklch(0.56 0.09 150);--good-soft:color-mix(in oklab,var(--good) 14%,var(--tint-bg));
+  --danger:oklch(0.55 0.15 28);--danger-soft:color-mix(in oklab,var(--danger) 14%,var(--tint-bg));
+  --warn:oklch(0.62 0.13 65);
+  --sans:"IBM Plex Sans",system-ui,-apple-system,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+  --r:12px;--r-sm:8px;--r-xs:6px;
+  --sh:0 1px 2px rgba(31,28,25,.05),0 1px 1px rgba(31,28,25,.04);
+  --sh-2:0 4px 14px rgba(31,28,25,.08),0 1px 3px rgba(31,28,25,.05);
+  --gut:18px;
+}
+[data-density="compact"]{--gut:12px;}
+html[data-theme="dark"]{
+  --paper:#15130f;--surface:#1f1c16;--surface-2:#1a1712;--surface-3:#2c2820;
+  --ink:#efece3;--ink-2:#a7a299;--ink-3:#746e63;--line:#332e25;--line-2:#272219;
+  --tint-bg:#1f1c16;
+  --good:oklch(0.74 0.10 150);--danger:oklch(0.72 0.14 28);--warn:oklch(0.82 0.11 70);
+  --sh:0 1px 2px rgba(0,0,0,.45);--sh-2:0 6px 18px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14.5px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+[data-density="compact"] body{font-size:13.5px;}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-0.01em;}
+p{margin:0;}
+button,input,select,textarea{font-family:inherit;}
+button{cursor:pointer;}
+input,select,textarea{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;font-size:13.5px;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--ink-3);}
+.mono{font-family:var(--mono);font-feature-settings:"tnum" 1;}
+.muted{color:var(--ink-2);}
+.faint{color:var(--ink-3);}
+.tiny{font-size:12px;}
+.up{color:var(--good);}.down{color:var(--danger);}
+a{color:var(--brok);text-decoration:none;}
+
+/* === APP BAR === */
+.appbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:22px;height:60px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:-0.03em;}
+.brand .name{font-weight:600;font-size:16px;letter-spacing:-0.02em;white-space:nowrap;}
+.brand .name span{color:var(--ink-3);font-weight:500;}
+.ticker{display:flex;gap:18px;align-items:center;padding:5px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;flex-shrink:0;}
+.ticker .ti{display:flex;align-items:baseline;gap:6px;font-size:12.5px;}
+.ticker .ti .k{color:var(--ink-2);font-weight:500;}
+.ticker .ti .v{font-family:var(--mono);font-weight:600;font-size:13px;}
+.ticker .ti .c{font-family:var(--mono);font-size:11px;}
+.appbar .spacer{flex:1;}
+.search-box{display:flex;align-items:center;gap:8px;width:230px;padding:7px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--ink-3);font-size:13.5px;cursor:text;}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid var(--line);background:var(--surface);border-radius:9px;font-size:13.5px;font-weight:500;color:var(--ink);box-shadow:var(--sh);}
+.btn:hover{background:var(--surface-2);}
+.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.btn.primary:hover{opacity:.9;}
+.btn.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent;}
+.btn .plus{font-size:17px;line-height:1;margin-top:-1px;}
+.btn.sm{height:30px;padding:0 10px;font-size:12.5px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-3);border:1px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+
+/* === TAB NAV === */
+.tabnav{display:flex;gap:2px;align-items:stretch;height:46px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:60px;z-index:39;}
+.tabnav button{position:relative;border:none;background:none;padding:0 16px;font-size:14px;font-weight:500;color:var(--ink-2);display:inline-flex;align-items:center;gap:8px;}
+.tabnav button:hover{color:var(--ink);}
+.tabnav button[aria-selected="true"]{color:var(--ink);font-weight:600;}
+.tabnav button[aria-selected="true"]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--ink);border-radius:2px;}
+.tabnav .count{font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:99px;background:var(--surface-3);color:var(--ink-2);}
+
+/* === LAYOUT === */
+.wrap{padding:20px 22px 60px;max-width:1640px;margin:0 auto;}
+.screen{display:none;}
+.screen.active{display:block;}
+
+/* === CHIPS / TAGS / BADGES === */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;letter-spacing:.01em;}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+.tag.brok{color:var(--brok);background:var(--brok-soft);}
+.tag.dev{color:var(--dev);background:var(--dev-soft);}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:4px 11px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap;}
+.chip:hover{border-color:var(--ink-3);color:var(--ink);}
+.chip.on,.chip[data-on="true"]{color:var(--ink);border-color:var(--ink-3);background:var(--surface-2);}
+.chip.brok.on,.chip.brok[data-on="true"]{color:var(--brok);border-color:var(--brok-line);background:var(--brok-soft);}
+.chip.dev.on,.chip.dev[data-on="true"]{color:var(--dev);border-color:var(--dev-line);background:var(--dev-soft);}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.9;}
+.chip.nofill::before{display:none;}
+.badge{font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;border:1px solid var(--line);}
+.badge.over{color:var(--danger);background:var(--danger-soft);border-color:transparent;}
+.badge.today{color:var(--warn);background:var(--dev-soft);border-color:transparent;}
+.badge.good{color:var(--good);background:var(--good-soft);border-color:transparent;}
+.badge.time{color:var(--ink-2);background:var(--surface-2);}
+
+/* === PANELS === */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-2);}
+.panel-h h3{font-size:14.5px;}
+.panel-h .sub{font-size:12px;color:var(--ink-3);}
+.panel-b{padding:14px 16px;}
+.panel-b.tight{padding:6px 16px;}
+
+/* === KPI STRIP === */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gut);margin-bottom:var(--gut);}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
+.kpi .k{font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px;}
+.kpi .v{font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:-0.02em;margin-top:4px;}
+.kpi .sub{font-size:12px;margin-top:3px;}
+.kpi.alert{border-color:var(--danger-soft);}
+.kpi.alert .v{color:var(--danger);}
+.kpi.ring-kpi{display:flex;align-items:center;gap:16px;}
+.dotk{width:8px;height:8px;border-radius:50%;}
+.ring{position:relative;width:74px;height:74px;flex:0 0 auto;}
+.ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring .track{fill:none;stroke:var(--surface-3);stroke-width:8;}
+.ring .prog{fill:none;stroke:var(--good);stroke-width:8;stroke-linecap:round;stroke-dasharray:213.6;stroke-dashoffset:213.6;transition:stroke-dashoffset .55s cubic-bezier(.22,1,.36,1);}
+.ring-pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:17px;letter-spacing:-0.02em;}
+
+/* === COMMAND CENTER === */
+.cc{display:grid;grid-template-columns:290px 1fr 320px;gap:var(--gut);align-items:start;}
+[data-density="compact"] .cc{grid-template-columns:260px 1fr 300px;}
+.col{display:grid;gap:var(--gut);}
+
+/* === NEWS === */
+.news .item{padding:11px 0;border-bottom:1px solid var(--line-2);}
+.news .item:last-child{border-bottom:none;}
+.news .item .src{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);display:flex;gap:7px;align-items:center;margin-bottom:3px;}
+.news .item .src .geo{color:var(--brok);}
+.news .item .hl{font-size:13.5px;line-height:1.35;cursor:pointer;}
+.news .item:hover .hl{text-decoration:underline;}
+
+/* === RATES === */
+.rate{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-2);}
+.rate:last-child{border-bottom:none;}
+.rate .nm{font-size:12.5px;color:var(--ink-2);}
+.rate .big{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-0.02em;}
+.rate .spark{width:90px;height:30px;}
+.rate .spark path{fill:none;stroke:var(--ink-3);stroke-width:1.6;}
+.rate .chg{font-family:var(--mono);font-size:11.5px;text-align:right;margin-top:2px;}
+
+/* === WEEK GRID === */
+.weekhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.weekhead .nav{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--sh);}
+.weekhead .nav button{border:none;background:var(--surface);padding:7px 11px;font-size:13px;border-right:1px solid var(--line);}
+.weekhead .nav button:last-child{border-right:none;}
+.weekhead .nav button:hover{background:var(--surface-2);}
+.weekgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+[data-density="compact"] .weekgrid{gap:7px;}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-height:300px;box-shadow:var(--sh);display:flex;flex-direction:column;}
+.day.today{border-color:var(--ink-3);}
+.day .dh{display:flex;align-items:baseline;justify-content:space-between;padding:10px 11px;border-bottom:1px solid var(--line-2);flex-wrap:wrap;gap:4px;}
+.day.today .dh{background:var(--surface-2);}
+.day .dh .dow{font-size:13px;font-weight:600;}
+.day .dh .dn{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+.day.today .dh .dn{color:var(--warn);font-weight:600;}
+.day .dbody{padding:8px;display:flex;flex-direction:column;gap:7px;flex:1;}
+.task{border:1px solid var(--line);border-left:3px solid var(--ink-3);border-radius:var(--r-sm);padding:8px 9px;background:var(--surface);transition:box-shadow .12s;}
+.task:hover{box-shadow:var(--sh-2);}
+.task.brok{border-left-color:var(--brok);}
+.task.dev{border-left-color:var(--dev);}
+.task.is-over{background:var(--danger-soft);border-color:transparent;}
+.task .ttop{display:flex;gap:8px;align-items:flex-start;}
+.task .ttl{font-size:12.5px;line-height:1.3;flex:1;}
+.task.done .ttl{color:var(--ink-3);text-decoration:line-through;}
+.task .tmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px;margin-left:24px;}
+.task .tproj{font-size:11px;color:var(--ink-2);background:var(--surface-3);padding:1px 7px;border-radius:5px;}
+.cbx{width:16px;height:16px;border:1.6px solid var(--ink-3);border-radius:5px;flex:0 0 auto;margin-top:1px;display:grid;place-items:center;background:var(--surface);cursor:pointer;transition:background .1s,border-color .1s;}
+.cbx:hover{border-color:var(--ink);}
+.cbx.on{background:var(--ink);border-color:var(--ink);}
+.cbx.on::after{content:"✓";color:var(--paper);font-size:11px;line-height:1;}
+.task-actions{display:flex;gap:4px;margin-left:auto;}
+.task-actions button{background:none;border:none;color:var(--ink-3);font-size:11px;padding:2px 5px;border-radius:4px;height:auto;}
+.task-actions button:hover{color:var(--danger);background:var(--danger-soft);}
+.addt{border:1px dashed var(--line);color:var(--ink-3);border-radius:var(--r-sm);padding:6px;font-size:12px;text-align:center;background:var(--surface-2);cursor:pointer;}
+.addt:hover{color:var(--ink-2);border-color:var(--ink-3);}
+.task.hide{display:none;}
+
+/* === RIGHT RAIL === */
+.proj-item{padding:11px 0;border-bottom:1px solid var(--line-2);}
+.proj-item:last-child{border-bottom:none;}
+.proj-item .pt{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.proj-item .pn{font-size:13.5px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.proj-item .pm{font-size:11.5px;color:var(--ink-2);margin:5px 0 7px;}
+.bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;}
+.bar>span{display:block;height:100%;border-radius:99px;background:var(--dev);}
+.bar.brok>span{background:var(--brok);}
+.fu{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2);cursor:pointer;}
+.fu:last-child{border-bottom:none;}
+.fu .who{font-size:13px;font-weight:500;}
+.fu .why{font-size:11.5px;color:var(--ink-2);}
+.fu .av{width:30px;height:30px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--ink-2);}
+
+/* === DEAL TRACKER === */
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.kan{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gut);align-items:start;}
+[data-density="compact"] .kan{gap:10px;}
+.kcol{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);min-height:200px;}
+.kcol .kh{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-bottom:1px solid var(--line);}
+.kcol .kh .kt{font-size:13px;font-weight:600;}
+.kcol .kh .ks{font-family:var(--mono);font-size:11px;color:var(--ink-2);}
+.kcol .ksum{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);padding:7px 13px;border-bottom:1px solid var(--line-2);}
+.kcol .kb{padding:10px;display:flex;flex-direction:column;gap:10px;}
+.deal{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:var(--r-sm);padding:11px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .12s,transform .12s;}
+.deal:hover{box-shadow:var(--sh-2);transform:translateY(-1px);}
+.deal.brok{border-top-color:var(--brok);}
+.deal.dev{border-top-color:var(--dev);}
+.deal .dn{font-size:13.5px;font-weight:600;}
+.deal .ds{font-size:11.5px;color:var(--ink-2);margin:4px 0 9px;}
+.deal .dval{font-family:var(--mono);font-size:13px;font-weight:600;}
+.deal .df{display:flex;align-items:center;justify-content:space-between;margin-top:9px;}
+.deal.closed-deal{opacity:.65;}
+.level{display:inline-flex;gap:3px;align-items:center;}
+.level i{width:6px;height:14px;border-radius:2px;background:var(--surface-3);}
+.level i.on{background:var(--ink-3);}
+.level.hot i.on{background:var(--dev);}
+.level.max i.on{background:var(--good);}
+
+/* === CONTACTS === */
+.ct{display:grid;grid-template-columns:1fr 360px;gap:var(--gut);align-items:start;}
+.table-wrap{overflow:auto;}
+.table{width:100%;border-collapse:collapse;}
+.table th{text-align:left;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:11px 14px;border-bottom:1px solid var(--line);}
+.table td{padding:12px 14px;border-bottom:1px solid var(--line-2);font-size:13.5px;}
+.table tr.clickable{cursor:pointer;}
+.table tbody tr.clickable:hover td{background:var(--surface-2);}
+.table tr.sel td{background:var(--brok-soft);}
+.ctname{display:flex;align-items:center;gap:10px;font-weight:500;}
+.av-sm{width:30px;height:30px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.detail{overflow:hidden;}
+.detail .dtop{display:flex;gap:13px;align-items:center;padding:16px;border-bottom:1px solid var(--line-2);}
+.detail .av-lg{width:54px;height:54px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:18px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.detail .nm{font-size:17px;font-weight:600;}
+.detail .co{font-size:12.5px;color:var(--ink-2);}
+.field{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 16px;font-size:13px;border-bottom:1px solid var(--line-2);}
+.field .fl{color:var(--ink-3);font-size:12px;padding-top:1px;}
+.subhead{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:10px 16px 6px;}
+.link{display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--line-2);}
+.link:last-child{border-bottom:none;}
+.logitem{padding:9px 16px;border-bottom:1px solid var(--line-2);}
+.logitem .when{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:3px;}
+.logitem:last-child{border-bottom:none;}
+
+/* === DEALS MAP === */
+.mapgrid{display:grid;grid-template-columns:1fr 340px;gap:var(--gut);}
+.mapcanvas{position:relative;min-height:550px;border-radius:var(--r);overflow:hidden;background:radial-gradient(120% 90% at 65% 30%,oklch(0.85 0.02 235) 0%,oklch(0.82 0.02 150) 58%,oklch(0.80 0.02 120) 100%);border:1px solid var(--line);}
+html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30%,oklch(0.27 0.02 235) 0%,oklch(0.24 0.02 150) 58%,oklch(0.22 0.02 120) 100%);}
+.map-nc-label,.map-sc-label{position:absolute;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);pointer-events:none;}
+.map-nc-label{left:45%;top:15%;}
+.map-sc-label{left:20%;top:72%;}
+.maptools{position:absolute;top:14px;left:14px;display:flex;gap:6px;}
+.mapzoom{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);}
+.mapzoom button{border:none;background:none;width:32px;height:32px;font-size:16px;color:var(--ink-2);}
+.mapzoom button:hover{background:var(--surface-2);}
+.mapzoom button:first-child{border-bottom:1px solid var(--line);}
+.wm{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--ink-3);letter-spacing:.04em;white-space:nowrap;}
+/* SVG Carolinas map */
+.carolinas-svg{position:absolute;inset:0;width:100%;height:100%;}
+/* Pins */
+.pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;z-index:2;}
+.pin-head{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid rgba(255,255,255,.25);}
+.pin-head span{transform:rotate(45deg);font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;}
+.pin.brok .pin-head{background:var(--brok);}
+.pin.dev .pin-head{background:var(--dev);}
+.pin.active .pin-head{background:var(--ink);border-color:var(--ink);}
+.pin-lbl{font-family:var(--mono);font-size:9.5px;font-weight:600;text-align:center;color:var(--ink-2);margin-top:4px;white-space:nowrap;}
+.maplist .panel-b{padding:8px 0;}
+.drow{display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--line-2);}
+.drow:last-child{border-bottom:none;}
+.drow:hover{background:var(--surface-2);}
+.drow.sel{background:var(--brok-soft);}
+.drow .pn{width:26px;height:26px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.drow.brok.sel .pn{background:var(--brok-soft);color:var(--brok);}
+.drow.dev.sel .pn{background:var(--dev-soft);color:var(--dev);}
+.drow .dn{font-size:13px;font-weight:500;}
+.drow .dl{font-size:11.5px;color:var(--ink-2);}
+.legend{display:flex;gap:20px;align-items:center;margin-top:12px;font-size:12.5px;color:var(--ink-2);}
+.legend .li{display:flex;align-items:center;gap:7px;}
+.legend .sw{width:12px;height:12px;border-radius:50%;}
+
+/* === MODAL === */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-2);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);}
+.modal-h h3{font-size:16px;}
+.modal-close{background:none;border:none;font-size:20px;color:var(--ink-3);line-height:1;padding:0;width:28px;height:28px;border-radius:6px;}
+.modal-close:hover{background:var(--surface-2);color:var(--ink);}
+.modal-b{padding:20px;}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.modal-footer{display:flex;gap:9px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line);}
+
+/* === TOAST === */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--paper);padding:10px 20px;border-radius:10px;font-size:13.5px;z-index:200;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* === SETTINGS PANEL === */
+.settings-panel{position:fixed;top:60px;right:0;width:280px;height:calc(100vh - 60px);background:var(--surface);border-left:1px solid var(--line);z-index:50;padding:20px;overflow-y:auto;transform:translateX(100%);transition:transform .2s;}
+.settings-panel.open{transform:translateX(0);}
+.settings-panel h3{font-size:14px;margin-bottom:16px;}
+.settings-section{margin-bottom:20px;}
+.settings-section label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;margin-bottom:10px;}
+.toggle{position:relative;width:38px;height:22px;cursor:pointer;}
+.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface-3);border-radius:99px;transition:background .2s;}
+.toggle-slider::after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:var(--ink-3);transition:transform .2s,background .2s;}
+.toggle input:checked+.toggle-slider{background:var(--ink);}
+.toggle input:checked+.toggle-slider::after{transform:translateX(16px);background:var(--paper);}
+
+/* === PIPELINE MINI === */
+.pipe-row{display:grid;grid-template-columns:78px 1fr auto;gap:9px;align-items:center;padding:7px 0;}
+.pipe-row .stg{font-size:11.5px;color:var(--ink-2);}
+.pipe-row .pbar{height:18px;background:var(--surface-3);border-radius:5px;overflow:hidden;}
+.pipe-row .pbar>span{display:block;height:100%;background:var(--brok-soft);border-right:2px solid var(--brok);}
+.pipe-row .amt{font-family:var(--mono);font-size:12px;font-weight:600;}
+.pipe-total{display:flex;justify-content:space-between;align-items:baseline;margin-top:8px;padding-top:10px;border-top:1px solid var(--line);}
+.pipe-total .v{font-family:var(--mono);font-size:19px;font-weight:600;}
+
+/* Scrollbar */
+::-webkit-scrollbar{width:6px;height:6px;}
+::-webkit-scrollbar-track{background:transparent;}
+::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}
+::-webkit-scrollbar-thumb:hover{background:var(--ink-3);}
+
+/* Responsive */
+@media(max-width:1100px){
+  .cc{grid-template-columns:260px 1fr;}
+  .cc .col:last-child{display:none;}
+}
+@media(max-width:860px){
+  .cc{grid-template-columns:1fr;}
+  .weekgrid{grid-template-columns:repeat(3,1fr);}
+  .kan{grid-template-columns:repeat(3,1fr);}
+  .ct{grid-template-columns:1fr;}
+  .kpis{grid-template-columns:repeat(2,1fr);}
+  .mapgrid{grid-template-columns:1fr;}
+}
+</style>
+</head>
+<body>
+
+<!-- APP BAR -->
+<header class="appbar">
+  <div class="brand">
+    <div class="mark">CH</div>
+    <div class="name">CRE&nbsp;HQ <span>· Carolinas desk</span></div>
+  </div>
+  <div class="ticker" id="ratesTicker">
+    <div class="ti"><span class="k">SOFR</span><span class="v" id="t-sofr">4.31</span><span class="c down" id="t-sofr-chg">▼0.02</span></div>
+    <div class="ti"><span class="k">10Y UST</span><span class="v" id="t-10y">4.44</span><span class="c up" id="t-10y-chg">▲0.03</span></div>
+    <div class="ti"><span class="k">2Y UST</span><span class="v">4.07</span><span class="c up">▲0.01</span></div>
+    <div class="ti"><span class="k">Prime</span><span class="v">7.50</span><span class="c">—</span></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="search-box" onclick="openSearch()">🔍 Search deals, contacts…</div>
+  <button class="btn primary" onclick="openQuickAdd()"><span class="plus">+</span> Quick add</button>
+  <div class="avatar" id="userAvatar" onclick="toggleSettings()">WN</div>
+</header>
+
+<!-- TAB NAV -->
+<nav class="tabnav" role="tablist">
+  <button role="tab" data-tab="home" aria-selected="true">This Week</button>
+  <button role="tab" data-tab="deals" aria-selected="false">Deal Tracker <span class="count" id="tab-deals-count">11</span></button>
+  <button role="tab" data-tab="contacts" aria-selected="false">Contacts <span class="count" id="tab-contacts-count">7</span></button>
+  <button role="tab" data-tab="map" aria-selected="false">Deals Map <span class="count" id="tab-map-count">7</span></button>
+</nav>
+
+<div class="wrap">
+
+<!-- ============ THIS WEEK ============ -->
+<section class="screen active" id="tab-home">
+  <div class="kpis">
+    <div class="kpi">
+      <div class="k"><span class="dotk" style="background:var(--ink-3)"></span>Tasks due this week</div>
+      <div class="v" id="kpi-tasks">14</div>
+      <div class="sub muted" id="kpi-tasks-sub">6 today · 8 later</div>
+    </div>
+    <div class="kpi alert" id="kpi-overdue-card">
+      <div class="k"><span class="dotk" style="background:var(--danger)"></span>Overdue follow-ups</div>
+      <div class="v" id="kpi-overdue">3</div>
+      <div class="sub down" id="kpi-overdue-names">Mercer · Rouse · Patel</div>
+    </div>
+    <div class="kpi">
+      <div class="k"><span class="dotk" style="background:var(--dev)"></span>Active deals</div>
+      <div class="v" id="kpi-deals">11</div>
+      <div class="sub muted" id="kpi-deals-sub">6 brokerage · 5 development</div>
+    </div>
+    <div class="kpi ring-kpi">
+      <div class="ring">
+        <svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="34"></circle><circle class="prog" id="weekProg" cx="40" cy="40" r="34"></circle></svg>
+        <div class="ring-pct" id="weekPct">0%</div>
+      </div>
+      <div>
+        <div class="k">Week complete</div>
+        <div class="v" style="font-size:18px;margin-top:2px" id="weekCount">0 of 0</div>
+        <div class="sub muted">tasks done</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cc">
+    <!-- LEFT -->
+    <div class="col">
+      <div class="panel news">
+        <div class="panel-h"><h3>CRE News</h3><span class="sub">SE · SC · NC</span></div>
+        <div class="panel-b tight" id="newsPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Rates</h3><span class="sub muted" id="ratesDate">30-day · live</span></div>
+        <div class="panel-b tight">
+          <div class="rate">
+            <div><div class="nm">SOFR</div><div class="big mono" id="rate-sofr">4.31<span style="font-size:13px">%</span></div></div>
+            <div><svg class="spark" viewBox="0 0 90 30" preserveAspectRatio="none"><path d="M0,20 L15,18 L30,21 L45,13 L60,15 L75,10 L90,12"/></svg><div class="chg down" id="rate-sofr-chg">▼ 0.02</div></div>
+          </div>
+          <div class="rate">
+            <div><div class="nm">10-Year Treasury</div><div class="big mono" id="rate-10y">4.44<span style="font-size:13px">%</span></div></div>
+            <div><svg class="spark" viewBox="0 0 90 30" preserveAspectRatio="none"><path d="M0,11 L15,14 L30,12 L45,17 L60,15 L75,20 L90,18"/></svg><div class="chg up" id="rate-10y-chg">▲ 0.03</div></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- CENTER: WEEK GRID -->
+    <div>
+      <div class="weekhead">
+        <div style="display:flex;gap:10px;align-items:center;">
+          <h3 style="font-size:16px">This Week</h3>
+          <span class="mono muted tiny" id="weekDateRange">Jun 1 – 5, 2026</span>
+        </div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="tiny faint">Filter:</span>
+          <button class="chip brok on" id="filter-brok" onclick="toggleFilter('brok')">Brokerage</button>
+          <button class="chip dev on" id="filter-dev" onclick="toggleFilter('dev')">Development</button>
+          <div class="nav">
+            <button onclick="navWeek(-1)">‹</button>
+            <button onclick="navWeek(0)">Today</button>
+            <button onclick="navWeek(1)">›</button>
+          </div>
+        </div>
+      </div>
+      <div class="weekgrid" id="weekGrid"></div>
+    </div>
+
+    <!-- RIGHT -->
+    <div class="col">
+      <div class="panel">
+        <div class="panel-h"><h3>Long-term Projects</h3><span class="sub">development</span></div>
+        <div class="panel-b tight" id="projectsPanel"></div>
+      </div>
+      <div class="panel">
+        <div class="panel-h"><h3>Follow-ups due</h3><span class="badge over" id="followupBadge">3 overdue</span></div>
+        <div class="panel-b tight" id="followupsPanel"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ DEAL TRACKER ============ -->
+<section class="screen" id="tab-deals">
+  <div class="toolbar">
+    <h3 style="font-size:16px;margin-right:6px">Pipeline</h3>
+    <button class="chip brok on" id="deal-filter-brok" onclick="toggleDealFilter('brok')">Brokerage</button>
+    <button class="chip dev on" id="deal-filter-dev" onclick="toggleDealFilter('dev')">Development</button>
+    <div class="spacer" style="flex:1"></div>
+    <span class="mono tiny muted" id="deal-summary"></span>
+    <button class="btn sm primary" onclick="openModal('deal')">+ New deal</button>
+  </div>
+  <div class="kan" id="kanban"></div>
+</section>
+
+<!-- ============ CONTACTS ============ -->
+<section class="screen" id="tab-contacts">
+  <div class="toolbar">
+    <input type="text" id="contactSearch" placeholder="Search name or company…" style="width:260px;" oninput="filterContacts()"/>
+    <button class="chip nofill on" data-ctype="all" onclick="setContactType('all')">All</button>
+    <button class="chip brok" data-ctype="Broker" onclick="setContactType('Broker')">Broker</button>
+    <button class="chip dev" data-ctype="Developer" onclick="setContactType('Developer')">Developer</button>
+    <button class="chip nofill" data-ctype="Tenant" onclick="setContactType('Tenant')">Tenant</button>
+    <button class="chip nofill" data-ctype="Investor" onclick="setContactType('Investor')">Investor</button>
+    <button class="chip nofill" data-ctype="Lender" onclick="setContactType('Lender')">Lender</button>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn sm primary" onclick="openModal('contact')">+ New contact</button>
+  </div>
+  <div class="ct">
+    <div class="panel" style="overflow:hidden">
+      <div class="table-wrap">
+        <table class="table">
+          <thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Last contact</th><th>Follow-up</th></tr></thead>
+          <tbody id="contactRows"></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="panel detail" id="contactDetail"><div style="padding:40px;text-align:center;color:var(--ink-3);font-size:13px;">Select a contact to view details</div></div>
+  </div>
+</section>
+
+<!-- ============ DEALS MAP ============ -->
+<section class="screen" id="tab-map">
+  <div class="mapgrid">
+    <div class="mapcanvas" id="mapCanvas">
+      <!-- Carolinas SVG outline -->
+      <svg class="carolinas-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="opacity:.15;pointer-events:none;">
+        <!-- North Carolina rough shape -->
+        <path d="M80,140 L120,120 L160,115 L200,110 L250,108 L300,110 L360,108 L420,112 L480,118 L520,125 L540,135 L535,155 L510,165 L470,170 L430,175 L390,180 L350,185 L310,190 L270,195 L230,200 L190,198 L155,195 L130,200 L110,210 L95,205 L85,190 Z" fill="var(--ink)" stroke="var(--line)" stroke-width="1"/>
+        <!-- South Carolina rough shape -->
+        <path d="M110,210 L130,200 L155,195 L190,198 L230,200 L270,195 L310,190 L310,215 L305,240 L295,265 L280,285 L260,305 L240,320 L215,330 L190,335 L170,325 L150,310 L130,295 L115,275 L108,255 L105,235 Z" fill="var(--ink)" stroke="var(--line)" stroke-width="1"/>
+      </svg>
+      <div class="map-nc-label">NORTH CAROLINA</div>
+      <div class="map-sc-label">SOUTH CAROLINA</div>
+      <div class="maptools">
+        <button class="chip brok on" data-on="true" onclick="toggleMapFilter(this,'brok')">Brok</button>
+        <button class="chip dev on" data-on="true" onclick="toggleMapFilter(this,'dev')">Dev</button>
+      </div>
+      <div class="mapzoom">
+        <button onclick="toast('Map zoom — wire to Mapbox / MapLibre for full geo')">+</button>
+        <button onclick="toast('Map zoom — wire to Mapbox / MapLibre for full geo')">−</button>
+      </div>
+      <div id="mapPins"></div>
+      <div class="wm">NC + SC · wire to Mapbox / MapLibre for production tiles</div>
+    </div>
+    <div class="panel maplist">
+      <div class="panel-h"><h3>Deals on map</h3><span class="sub" id="mapCount">7</span></div>
+      <div id="mapRows"></div>
+    </div>
+  </div>
+  <div class="legend">
+    <span class="li"><span class="sw" style="background:var(--brok)"></span> Brokerage</span>
+    <span class="li"><span class="sw" style="background:var(--dev)"></span> Development</span>
+    <span class="li faint" style="font-size:12px;">Click a pin or a row — selection stays in sync.</span>
+  </div>
+</section>
+
+</div><!-- /wrap -->
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<!-- SETTINGS PANEL -->
+<div class="settings-panel" id="settingsPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+    <h3>Settings</h3>
+    <button class="modal-close" onclick="toggleSettings()">×</button>
+  </div>
+  <div class="settings-section">
+    <label>Appearance</label>
+    <div class="toggle-row">
+      <span>Dark mode</span>
+      <label class="toggle"><input type="checkbox" id="toggleDark" onchange="setTheme(this.checked)"/><span class="toggle-slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>Compact density</span>
+      <label class="toggle"><input type="checkbox" id="toggleCompact" onchange="setDensity(this.checked)"/><span class="toggle-slider"></span></label>
+    </div>
+  </div>
+  <div class="settings-section">
+    <label>Your initials</label>
+    <input type="text" id="initialsInput" maxlength="2" style="text-transform:uppercase;" oninput="setInitials(this.value)"/>
+  </div>
+  <div class="settings-section" style="margin-top:30px;border-top:1px solid var(--line);padding-top:16px;">
+    <label>Data</label>
+    <button class="btn sm" onclick="exportData()" style="width:100%;justify-content:center;margin-bottom:8px;">Export JSON backup</button>
+    <button class="btn sm danger" onclick="resetData()" style="width:100%;justify-content:center;">Reset to sample data</button>
+  </div>
+</div>
+
+<!-- MODALS -->
+<div class="modal-backdrop" id="modalBackdrop" style="display:none;" onclick="if(event.target===this)closeModal()">
+  <div class="modal" id="modalBox"></div>
+</div>
+
+<script>
+'use strict';
+// ============================================================
+// STATE
+// ============================================================
+const STORE_KEY = 'cre_hq_v2';
+let STATE = loadState();
+
+function defaultState() {
+  const today = new Date();
+  const mon = getWeekMonday(today);
+  const fmt = d => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const m0 = fmt(mon);
+  const d = (offset) => { const x = new Date(mon); x.setDate(x.getDate()+offset); return fmt(x); };
+  return {
+    theme: 'dark',
+    density: 'comfortable',
+    initials: 'WN',
+    activeTab: 'home',
+    weekOffset: 0,
+    tasks: [
+      {id:'t1',title:'Call back J. Mercer — Uptown sublease terms',type:'brok',projectId:'Charlotte Office',day:d(0),time:'',dueBadge:'follow-up +4d',dueType:'over',done:false},
+      {id:'t2',title:'Submit site-plan revisions',type:'dev',projectId:'Greenville Ind. Park',day:d(0),time:'5:00p',dueBadge:'5:00p',dueType:'today',done:false},
+      {id:'t3',title:'Tour flex space w/ tenant rep',type:'brok',projectId:'Spartanburg Flex',day:d(1),time:'10:30a',dueBadge:'10:30a',dueType:'time',done:false},
+      {id:'t4',title:'Lender call — construction draw #3',type:'dev',projectId:'Columbia Mixed-Use',day:d(1),time:'1:00p',dueBadge:'1:00p',dueType:'time',done:false},
+      {id:'t5',title:'Send LOI draft',type:'brok',projectId:'Raleigh Retail Pad',day:d(2),time:'',dueBadge:'',dueType:'',done:true},
+      {id:'t6',title:'Zoning hearing prep',type:'dev',projectId:'Wilmington Land',day:d(2),time:'2:00p',dueBadge:'2:00p',dueType:'time',done:false},
+      {id:'t7',title:'Follow up: warehouse lease redline',type:'brok',projectId:'Charleston WH',day:d(3),time:'',dueBadge:'+3d',dueType:'over',done:false},
+      {id:'t8',title:'Weekly dev pipeline review',type:'dev',projectId:'All projects',day:d(4),time:'9:00a',dueBadge:'9:00a',dueType:'time',done:false},
+      {id:'t9',title:'Update commission forecast',type:'brok',projectId:'Brokerage',day:d(4),time:'',dueBadge:'',dueType:'',done:false},
+    ],
+    deals: [
+      {id:'d1',name:'Greenville Ind. Park — Ph 1',location:'Greenville, SC',size:'±85 ac',type:'dev',stage:'under-contract',value:2200000,level:4,lat:34.5,lng:-82.3},
+      {id:'d2',name:'Columbia Mixed-Use',location:'Columbia, SC',size:'infill block',type:'dev',stage:'under-contract',value:3500000,level:4,lat:34.0,lng:-81.0},
+      {id:'d3',name:'Charleston warehouse',location:'Charleston, SC',size:'85k sf · lease',type:'brok',stage:'lease-sale',value:850000,level:3,lat:32.8,lng:-79.9},
+      {id:'d4',name:'Charlotte Uptown sublease',location:'Charlotte, NC',size:'9k sf',type:'brok',stage:'lease-sale',value:300000,level:3,lat:35.2,lng:-80.8},
+      {id:'d5',name:'Raleigh retail pad',location:'Raleigh, NC',size:'sale',type:'brok',stage:'lease-sale',value:1600000,level:3,lat:35.7,lng:-78.6},
+      {id:'d6',name:'Wilmington land assemblage',location:'Wilmington, NC',size:'±18 ac',type:'dev',stage:'prelim',value:2400000,level:1,lat:34.2,lng:-77.9},
+      {id:'d7',name:'Spartanburg flex lease',location:'Spartanburg, SC',size:'22k sf',type:'brok',stage:'loi',value:600000,level:2,lat:34.9,lng:-81.9},
+      {id:'d8',name:'N. Charleston bulk WH',location:'Charleston, SC',size:'120k sf',type:'brok',stage:'prelim',value:1100000,level:1,lat:33.0,lng:-80.0},
+      {id:'d9',name:'Columbia parcel B',location:'Columbia, SC',size:'infill',type:'dev',stage:'prelim',value:900000,level:1,lat:34.1,lng:-81.1},
+      {id:'d10',name:'Greenville outparcel — QSR',location:'Greenville, SC',size:'pad',type:'dev',stage:'loi',value:400000,level:2,lat:34.6,lng:-82.4},
+      {id:'d11',name:'Mauldin retail lease',location:'Mauldin, SC',size:'closed May',type:'brok',stage:'closed',value:0,fee:42000,level:4,lat:34.8,lng:-82.3},
+    ],
+    contacts: [
+      {id:'c1',ini:'JM',name:'J. Mercer',company:'Mercer Group',role:'Tenant rep',type:'Broker',phone:'(864) 555-0142',email:'jmercer@mercergrp.com',lastContact:'2026-05-28',followUpDate:'2026-05-28',followUpNote:'Call re: Uptown sublease',linkedDeals:['d4','d7'],log:[{date:'2026-05-28',type:'call',note:'Walked sublease terms; wants a TI allowance.'},{date:'2026-05-14',type:'email',note:'Sent Uptown availability + comps.'},{date:'2026-04-30',type:'meeting',note:'Intro at the Upstate CRE mixer.'}]},
+      {id:'c2',ini:'DR',name:'D. Rouse',company:'Lowcountry Logistics',role:'Tenant',type:'Tenant',phone:'(843) 555-0190',email:'drouse@lowcolog.com',lastContact:'2026-05-29',followUpDate:'2026-05-29',followUpNote:'Lease redline',linkedDeals:['d3'],log:[{date:'2026-05-29',type:'email',note:'Returned lease redline — pushing on escalations.'},{date:'2026-05-18',type:'call',note:'Confirmed 85k sf requirement.'}]},
+      {id:'c3',ini:'KP',name:'K. Patel',company:'Palmetto Capital',role:'Lender',type:'Lender',phone:'(803) 555-0173',email:'kpatel@palmettocap.com',lastContact:'2026-05-30',followUpDate:'2026-06-01',followUpNote:'Draw schedule review',linkedDeals:['d2','d1'],log:[{date:'2026-05-30',type:'call',note:'Reviewed draw #3 schedule.'},{date:'2026-05-09',type:'meeting',note:'Term sheet for Columbia construction loan.'}]},
+      {id:'c4',ini:'SL',name:'S. Lowery',company:'Triangle Retail Partners',role:'Investor',type:'Investor',phone:'(919) 555-0118',email:'slowery@trianglerp.com',lastContact:'2026-05-22',followUpDate:'2026-06-08',followUpNote:'1031 timing update',linkedDeals:['d5'],log:[{date:'2026-05-22',type:'email',note:'Sent Raleigh pad OM.'},{date:'2026-05-01',type:'call',note:'Discussed 1031 timing.'}]},
+      {id:'c5',ini:'BW',name:'B. Whitfield',company:'Upstate Brokers',role:'Broker',type:'Broker',phone:'(864) 555-0155',email:'bwhitfield@upstatebrokers.com',lastContact:'2026-05-19',followUpDate:'2026-06-12',followUpNote:'Co-broke update',linkedDeals:['d10'],log:[{date:'2026-05-19',type:'call',note:'Co-broke on the Greenville pad.'}]},
+      {id:'c6',ini:'AC',name:'A. Cole',company:'Cole Development',role:'Developer',type:'Developer',phone:'(910) 555-0166',email:'acole@coledev.com',lastContact:'2026-05-15',followUpDate:'',followUpNote:'',linkedDeals:['d6'],log:[{date:'2026-05-15',type:'meeting',note:'JV discussion on Wilmington waterfront.'}]},
+      {id:'c7',ini:'TH',name:'T. Hayes',company:'Carolinas Bank',role:'Lender',type:'Lender',phone:'(704) 555-0129',email:'thayes@carolinasbank.com',lastContact:'2026-05-12',followUpDate:'2026-06-20',followUpNote:'Permanent financing options',linkedDeals:['d1'],log:[{date:'2026-05-12',type:'call',note:'Permanent financing options for Greenville.'}]},
+    ],
+    projects: [
+      {id:'p1',name:'Columbia Mixed-Use',type:'dev',phase:'Entitlements',nextMilestone:'draw #3',progress:42},
+      {id:'p2',name:'Greenville Ind. Park',type:'dev',phase:'Site work',nextMilestone:'permits',progress:64},
+      {id:'p3',name:'Wilmington Waterfront',type:'dev',phase:'Pre-development',nextMilestone:'zoning',progress:18},
+    ],
+    news: [
+      {geo:'York County',outlet:'Herald',hl:'Rock Hill industrial corridor sees record lease absorption in Q1'},
+      {geo:'Greenville',outlet:'Upstate Biz Journal',hl:'Industrial absorption tightens along the I-85 corridor'},
+      {geo:'Charlotte',outlet:'CoStar',hl:'Uptown office sublease availability ticks down in Q2'},
+      {geo:'Raleigh',outlet:'Triangle Business',hl:'Two new logistics parks break ground near RDU'},
+      {geo:'Charleston',outlet:'Regional Biz',hl:'Port volume drives warehouse demand in the Lowcountry'},
+      {geo:'Columbia',outlet:'The State',hl:'Midlands multifamily starts cool as financing costs hold'},
+      {geo:'York County',outlet:'SC Biz News',hl:'I-77 corridor attracts two new distribution center proposals'},
+      {geo:'Greenville',outlet:'GSA Business',hl:'Greenville-Spartanburg metro sees 12% YoY rent growth in flex industrial'},
+    ],
+    filterBrok: true,
+    filterDev: true,
+    dealFilterBrok: true,
+    dealFilterDev: true,
+    selectedContact: 'c1',
+    selectedMapDeal: 'd1',
+  };
+}
+
+function loadState() {
+  try {
+    const raw = localStorage.getItem(STORE_KEY);
+    if (raw) return JSON.parse(raw);
+  } catch(e) {}
+  return defaultState();
+}
+
+function saveState() {
+  try { localStorage.setItem(STORE_KEY, JSON.stringify(STATE)); } catch(e) {}
+}
+
+// ============================================================
+// UTILITIES
+// ============================================================
+function getWeekMonday(date) {
+  const d = new Date(date);
+  const day = d.getDay();
+  const diff = day === 0 ? -6 : 1 - day;
+  d.setDate(d.getDate() + diff);
+  d.setHours(0,0,0,0);
+  return d;
+}
+function fmt(d) {
+  return `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+}
+function fmtDisplay(dateStr) {
+  if (!dateStr) return '';
+  const d = new Date(dateStr+'T12:00:00');
+  return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});
+}
+function fmtMoney(v) {
+  if (!v) return '$0';
+  if (v >= 1000000) return `$${(v/1000000).toFixed(1)}M`;
+  if (v >= 1000) return `$${(v/1000).toFixed(0)}K`;
+  return `$${v}`;
+}
+function initials(name) {
+  return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);
+}
+function uid() {
+  return 'x' + Math.random().toString(36).slice(2,9);
+}
+function todayStr() {
+  return fmt(new Date());
+}
+function daysBetween(a, b) {
+  const da = new Date(a+'T12:00:00'), db = new Date(b+'T12:00:00');
+  return Math.round((db-da)/(1000*60*60*24));
+}
+function followUpStatus(contact) {
+  if (!contact.followUpDate) return {txt:'none set',cls:'time'};
+  const today = todayStr();
+  const diff = daysBetween(today, contact.followUpDate);
+  if (diff < 0) return {txt:`overdue ${Math.abs(diff)}d`,cls:'over'};
+  if (diff === 0) return {txt:'due today',cls:'today'};
+  return {txt:fmtDisplay(contact.followUpDate),cls:'time'};
+}
+
+// ============================================================
+// TOAST
+// ============================================================
+let toastTimer;
+function toast(msg) {
+  const el = document.getElementById('toast');
+  el.textContent = msg;
+  el.classList.add('show');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => el.classList.remove('show'), 2200);
+}
+
+// ============================================================
+// TAB NAV
+// ============================================================
+function showTab(id) {
+  document.querySelectorAll('.tabnav [data-tab]').forEach(t => t.setAttribute('aria-selected', t.dataset.tab === id ? 'true' : 'false'));
+  document.querySelectorAll('.screen').forEach(s => s.classList.toggle('active', s.id === 'tab-' + id));
+  STATE.activeTab = id;
+  saveState();
+  window.scrollTo({top:0,behavior:'instant'});
+}
+document.querySelectorAll('.tabnav [data-tab]').forEach(t => t.addEventListener('click', () => showTab(t.dataset.tab)));
+
+// ============================================================
+// THEME / SETTINGS
+// ============================================================
+function applyTheme() {
+  document.documentElement.dataset.theme = STATE.theme;
+  document.documentElement.dataset.density = STATE.density;
+  const darkCb = document.getElementById('toggleDark');
+  const compactCb = document.getElementById('toggleCompact');
+  if (darkCb) darkCb.checked = STATE.theme === 'dark';
+  if (compactCb) compactCb.checked = STATE.density === 'compact';
+  const av = document.getElementById('userAvatar');
+  const initIn = document.getElementById('initialsInput');
+  if (av) av.textContent = STATE.initials || 'WN';
+  if (initIn) initIn.value = STATE.initials || 'WN';
+}
+function setTheme(dark) { STATE.theme = dark ? 'dark' : 'light'; saveState(); applyTheme(); }
+function setDensity(compact) { STATE.density = compact ? 'compact' : 'comfortable'; saveState(); applyTheme(); }
+function setInitials(v) { STATE.initials = v.toUpperCase().slice(0,2); saveState(); applyTheme(); }
+function toggleSettings() { document.getElementById('settingsPanel').classList.toggle('open'); }
+
+// ============================================================
+// NEWS
+// ============================================================
+function renderNews() {
+  const panel = document.getElementById('newsPanel');
+  panel.innerHTML = STATE.news.slice(0,6).map(n => `
+    <div class="item">
+      <div class="src"><span class="geo">${n.geo}</span> · ${n.outlet}</div>
+      <div class="hl" onclick="toast('Opening: ${n.hl.slice(0,40)}…')">${n.hl}</div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// WEEK GRID
+// ============================================================
+function currentWeekMonday() {
+  const base = getWeekMonday(new Date());
+  base.setDate(base.getDate() + STATE.weekOffset * 7);
+  return base;
+}
+function renderWeek() {
+  const mon = currentWeekMonday();
+  const days = Array.from({length:5}, (_,i) => { const d = new Date(mon); d.setDate(d.getDate()+i); return d; });
+  const todayS = todayStr();
+  const dayNames = ['Mon','Tue','Wed','Thu','Fri'];
+  const dateRange = `${days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})} – ${days[4].toLocaleDateString('en-US',{month:'short',day:'numeric'})}, ${days[0].getFullYear()}`;
+  document.getElementById('weekDateRange').textContent = dateRange;
+
+  const grid = document.getElementById('weekGrid');
+  grid.innerHTML = days.map((d,i) => {
+    const ds = fmt(d);
+    const isToday = ds === todayS;
+    const dayTasks = STATE.tasks.filter(t => t.day === ds);
+    const tasksHtml = dayTasks.map(t => {
+      const hide = (!STATE.filterBrok && t.type==='brok') || (!STATE.filterDev && t.type==='dev') ? 'hide' : '';
+      const over = t.dueType === 'over' ? 'is-over' : '';
+      const badge = t.dueBadge ? `<span class="badge ${t.dueType}">${t.dueBadge}</span>` : '';
+      return `
+        <div class="task ${t.type} ${t.done?'done':''} ${over} ${hide}" data-tid="${t.id}">
+          <div class="ttop">
+            <span class="cbx ${t.done?'on':''}" onclick="toggleTask('${t.id}',event)"></span>
+            <span class="ttl">${t.title}</span>
+            <span class="task-actions"><button onclick="deleteTask('${t.id}',event)" title="Delete">✕</button></span>
+          </div>
+          <div class="tmeta">
+            ${t.projectId ? `<span class="tproj">${t.projectId}</span>` : ''}
+            ${badge}
+          </div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="day ${isToday?'today':''}">
+        <div class="dh">
+          <span class="dow">${dayNames[i]}</span>
+          <span class="dn">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}${isToday?' · TODAY':''}</span>
+        </div>
+        <div class="dbody" id="day-${ds}">
+          ${tasksHtml}
+          <div class="addt" onclick="openAddTask('${ds}')">+ add task</div>
+        </div>
+      </div>`;
+  }).join('');
+  updateWeekRing();
+}
+
+function toggleTask(id, e) {
+  e.stopPropagation();
+  const t = STATE.tasks.find(x => x.id === id);
+  if (t) { t.done = !t.done; saveState(); updateWeekRing(); 
+    const el = document.querySelector(`[data-tid="${id}"]`);
+    if (el) { el.classList.toggle('done', t.done); el.querySelector('.cbx').classList.toggle('on', t.done); }
+  }
+}
+function deleteTask(id, e) {
+  e.stopPropagation();
+  if (!confirm('Delete this task?')) return;
+  STATE.tasks = STATE.tasks.filter(x => x.id !== id);
+  saveState(); renderWeek(); renderKPIs();
+}
+function toggleFilter(type) {
+  if (type === 'brok') STATE.filterBrok = !STATE.filterBrok;
+  else STATE.filterDev = !STATE.filterDev;
+  saveState();
+  document.getElementById('filter-brok').classList.toggle('on', STATE.filterBrok);
+  document.getElementById('filter-dev').classList.toggle('on', STATE.filterDev);
+  document.querySelectorAll('#weekGrid .task').forEach(el => {
+    const t = STATE.tasks.find(x => x.id === el.dataset.tid);
+    if (t) el.classList.toggle('hide', (t.type==='brok' && !STATE.filterBrok)||(t.type==='dev' && !STATE.filterDev));
+  });
+}
+function navWeek(dir) {
+  if (dir === 0) STATE.weekOffset = 0; else STATE.weekOffset += dir;
+  saveState(); renderWeek();
+}
+function updateWeekRing() {
+  const allTasks = document.querySelectorAll('#weekGrid .task');
+  const done = document.querySelectorAll('#weekGrid .task.done').length;
+  const total = allTasks.length;
+  const pct = total ? Math.round(done/total*100) : 0;
+  const C = 2*Math.PI*34;
+  const prog = document.getElementById('weekProg');
+  if (prog) prog.style.strokeDashoffset = (C*(1-pct/100)).toFixed(1);
+  document.getElementById('weekPct').textContent = pct+'%';
+  document.getElementById('weekCount').textContent = `${done} of ${total}`;
+}
+
+// ============================================================
+// KPIs
+// ============================================================
+function renderKPIs() {
+  const mon = currentWeekMonday();
+  const fri = new Date(mon); fri.setDate(fri.getDate()+4);
+  const weekDates = new Set(Array.from({length:5},(_,i)=>{ const d=new Date(mon); d.setDate(d.getDate()+i); return fmt(d); }));
+  const weekTasks = STATE.tasks.filter(t => weekDates.has(t.day));
+  const todayT = weekTasks.filter(t => t.day === todayStr());
+  document.getElementById('kpi-tasks').textContent = weekTasks.length;
+  document.getElementById('kpi-tasks-sub').textContent = `${todayT.length} today · ${weekTasks.length-todayT.length} later`;
+
+  const today = todayStr();
+  const overdue = STATE.contacts.filter(c => c.followUpDate && c.followUpDate < today);
+  document.getElementById('kpi-overdue').textContent = overdue.length;
+  document.getElementById('kpi-overdue-names').textContent = overdue.slice(0,3).map(c=>c.name.split(' ')[1]).join(' · ') || 'None';
+  document.getElementById('kpi-overdue-card').classList.toggle('alert', overdue.length > 0);
+
+  const active = STATE.deals.filter(d => d.stage !== 'closed');
+  const brokCount = active.filter(d=>d.type==='brok').length;
+  const devCount = active.filter(d=>d.type==='dev').length;
+  document.getElementById('kpi-deals').textContent = active.length;
+  document.getElementById('kpi-deals-sub').textContent = `${brokCount} brokerage · ${devCount} development`;
+
+  document.getElementById('tab-deals-count').textContent = active.length;
+  document.getElementById('tab-contacts-count').textContent = STATE.contacts.length;
+}
+
+// ============================================================
+// PROJECTS PANEL
+// ============================================================
+function renderProjects() {
+  const panel = document.getElementById('projectsPanel');
+  panel.innerHTML = STATE.projects.map(p => `
+    <div class="proj-item">
+      <div class="pt"><span class="pn">${p.name}</span><span class="tag ${p.type}">${p.type==='dev'?'Dev':'Brok'}</span></div>
+      <div class="pm">${p.phase} · next: ${p.nextMilestone}</div>
+      <div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div>
+    </div>
+  `).join('');
+}
+
+// ============================================================
+// FOLLOW-UPS PANEL
+// ============================================================
+function renderFollowups() {
+  const today = todayStr();
+  const overdue = STATE.contacts.filter(c => c.followUpDate && c.followUpDate < today).sort((a,b)=>a.followUpDate.localeCompare(b.followUpDate));
+  const dueToday = STATE.contacts.filter(c => c.followUpDate === today);
+  const all = [...overdue, ...dueToday];
+  document.getElementById('followupBadge').textContent = `${overdue.length} overdue`;
+  document.getElementById('followupsPanel').innerHTML = all.length ? all.slice(0,5).map(c => {
+    const fu = followUpStatus(c);
+    return `<div class="fu" onclick="showTab('contacts');setTimeout(()=>selectContact('${c.id}'),100)">
+      <span class="av">${c.ini}</span>
+      <div><div class="who">${c.name}</div><div class="why">${c.followUpNote||'Follow-up due'} · ${fu.txt}</div></div>
+      <span class="badge ${fu.cls}">${fu.cls==='over'?'!':'due'}</span>
+    </div>`;
+  }).join('') : '<div style="padding:12px 0;color:var(--ink-3);font-size:13px;">No overdue follow-ups 🎉</div>';
+}
+
+// ============================================================
+// DEAL TRACKER
+// ============================================================
+const STAGES = [
+  {id:'prelim',label:'Prelim',prob:'10%'},
+  {id:'loi',label:'LOI',prob:'30%'},
+  {id:'lease-sale',label:'Lease / Sale',prob:'60%'},
+  {id:'under-contract',label:'Under Contract',prob:'85%'},
+  {id:'closed',label:'Closed',prob:'100%'},
+];
+function dealFee(d) { return d.fee || Math.round(d.value * 0.035 * (STAGES.findIndex(s=>s.id===d.stage)+1)/5); }
+function toggleDealFilter(type) {
+  if (type==='brok') STATE.dealFilterBrok = !STATE.dealFilterBrok;
+  else STATE.dealFilterDev = !STATE.dealFilterDev;
+  saveState();
+  document.getElementById('deal-filter-brok').classList.toggle('on', STATE.dealFilterBrok);
+  document.getElementById('deal-filter-dev').classList.toggle('on', STATE.dealFilterDev);
+  renderDeals();
+}
+function renderDeals() {
+  const active = STATE.deals.filter(d => d.stage !== 'closed');
+  const brokFee = active.filter(d=>d.type==='brok').reduce((s,d)=>s+dealFee(d),0);
+  const devFee = active.filter(d=>d.type==='dev').reduce((s,d)=>s+dealFee(d),0);
+  document.getElementById('deal-summary').textContent = `${active.length} active deals · ${fmtMoney(brokFee+devFee)} gross fees`;
+  document.getElementById('tab-map-count').textContent = STATE.deals.filter(d=>d.lat).length;
+
+  const kanban = document.getElementById('kanban');
+  kanban.innerHTML = STAGES.map(stage => {
+    let deals = STATE.deals.filter(d => d.stage === stage.id);
+    if (!STATE.dealFilterBrok) deals = deals.filter(d=>d.type!=='brok');
+    if (!STATE.dealFilterDev) deals = deals.filter(d=>d.type!=='dev');
+    const fees = deals.reduce((s,d)=>s+dealFee(d),0);
+    const dealsHtml = deals.map(d => {
+      const bars = Array.from({length:4},(_,i)=>`<i class="${i<d.level?'on':''}"></i>`).join('');
+      const levelCls = d.level===4?'max':d.level>=3?'hot':'';
+      if (stage.id==='closed') return `
+        <div class="deal ${d.type} closed-deal" onclick="openEditDeal('${d.id}')">
+          <div class="dn">${d.name}</div>
+          <div class="ds">${d.location} · ${d.size||'—'}</div>
+          <div class="df"><span class="badge good">won · ${fmtMoney(d.fee||dealFee(d))}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>
+        </div>`;
+      return `
+        <div class="deal ${d.type}" onclick="openEditDeal('${d.id}')">
+          <div class="dn">${d.name}</div>
+          <div class="ds">${d.location} · ${d.size||'—'}</div>
+          <div class="dval">${fmtMoney(d.value)}</div>
+          <div class="df"><span class="level ${levelCls}">${bars}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>
+        </div>`;
+    }).join('');
+    return `
+      <div class="kcol">
+        <div class="kh"><span class="kt">${stage.label}</span><span class="ks">${deals.length}</span></div>
+        <div class="ksum">${stage.prob} · ${fmtMoney(fees)} fees</div>
+        <div class="kb">${dealsHtml}<div class="addt" onclick="openModalForStage('${stage.id}')">+ new deal</div></div>
+      </div>`;
+  }).join('');
+}
+
+// ============================================================
+// CONTACTS
+// ============================================================
+let contactTypeFilter = 'all';
+function setContactType(type) {
+  contactTypeFilter = type;
+  document.querySelectorAll('[data-ctype]').forEach(b => b.classList.toggle('on', b.dataset.ctype === type));
+  filterContacts();
+}
+function filterContacts() {
+  const q = document.getElementById('contactSearch').value.toLowerCase();
+  const rows = document.querySelectorAll('#contactRows tr');
+  rows.forEach(tr => {
+    const cid = tr.dataset.cid;
+    const c = STATE.contacts.find(x=>x.id===cid);
+    if (!c) return;
+    const matchType = contactTypeFilter === 'all' || c.type === contactTypeFilter;
+    const matchQ = !q || c.name.toLowerCase().includes(q) || c.company.toLowerCase().includes(q);
+    tr.style.display = (matchType && matchQ) ? '' : 'none';
+  });
+}
+function renderContacts() {
+  const tbody = document.getElementById('contactRows');
+  tbody.innerHTML = STATE.contacts.map(c => {
+    const fu = followUpStatus(c);
+    return `<tr class="clickable ${c.id===STATE.selectedContact?'sel':''}" data-cid="${c.id}" onclick="selectContact('${c.id}')">
+      <td><div class="ctname"><span class="av-sm">${c.ini}</span>${c.name}</div></td>
+      <td>${c.company}</td>
+      <td>${c.role}</td>
+      <td class="mono tiny">${fmtDisplay(c.lastContact)||'—'}</td>
+      <td><span class="badge ${fu.cls}">${fu.txt}</span></td>
+    </tr>`;
+  }).join('');
+  if (STATE.selectedContact) renderContactDetail(STATE.selectedContact);
+}
+function selectContact(id) {
+  STATE.selectedContact = id;
+  saveState();
+  document.querySelectorAll('#contactRows tr').forEach(tr => tr.classList.toggle('sel', tr.dataset.cid === id));
+  renderContactDetail(id);
+}
+function renderContactDetail(id) {
+  const c = STATE.contacts.find(x=>x.id===id);
+  const panel = document.getElementById('contactDetail');
+  if (!c) { panel.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-3)">Select a contact</div>'; return; }
+  const fu = followUpStatus(c);
+  const deals = (c.linkedDeals||[]).map(did => {
+    const d = STATE.deals.find(x=>x.id===did);
+    if (!d) return '';
+    return `<div class="link"><span style="font-size:13px">${d.name}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>`;
+  }).join('');
+  const log = (c.log||[]).map(l => `<div class="logitem"><div class="when">${fmtDisplay(l.date)} · ${l.type}</div>${l.note}</div>`).join('');
+  panel.innerHTML = `
+    <div class="dtop">
+      <div class="av-lg">${c.ini}</div>
+      <div><div class="nm">${c.name}</div><div class="co">${c.company} · ${c.role}</div></div>
+      <div style="margin-left:auto;display:flex;gap:6px;">
+        <button class="btn sm" onclick="openEditContact('${c.id}')">Edit</button>
+        <button class="btn sm danger" onclick="deleteContact('${c.id}')">✕</button>
+      </div>
+    </div>
+    <div class="field"><span class="fl">Phone</span><span class="fv mono">${c.phone||'—'}</span></div>
+    <div class="field"><span class="fl">Email</span><span class="fv">${c.email||'—'}</span></div>
+    <div class="field"><span class="fl">Type</span><span class="fv">${c.type||'—'}</span></div>
+    <div class="field"><span class="fl">Last contact</span><span class="fv">${fmtDisplay(c.lastContact)||'—'}</span></div>
+    <div class="field"><span class="fl">Follow-up</span><span class="fv"><span class="badge ${fu.cls}">${fu.txt}</span></span></div>
+    ${deals ? `<div class="subhead">Linked deals</div>${deals}` : ''}
+    <div class="subhead">Interaction log</div>
+    ${log || '<div style="padding:8px 16px;color:var(--ink-3);font-size:12px;">No interactions logged</div>'}
+    <div style="padding:12px 16px 16px;">
+      <button class="btn" style="width:100%;justify-content:center" onclick="logInteraction('${c.id}')">+ Log interaction</button>
+    </div>`;
+}
+function deleteContact(id) {
+  if (!confirm('Delete this contact?')) return;
+  STATE.contacts = STATE.contacts.filter(x=>x.id!==id);
+  if (STATE.selectedContact === id) STATE.selectedContact = STATE.contacts[0]?.id || '';
+  saveState(); renderContacts(); renderFollowups(); renderKPIs();
+}
+function logInteraction(id) {
+  const c = STATE.contacts.find(x=>x.id===id);
+  if (!c) return;
+  const note = prompt('Log note (e.g. "Quick call re: lease terms")');
+  if (!note) return;
+  if (!c.log) c.log = [];
+  c.log.unshift({date:todayStr(),type:'call',note});
+  c.lastContact = todayStr();
+  saveState(); renderContactDetail(id); renderFollowups();
+  toast('Interaction logged — last contact updated.');
+}
+
+// ============================================================
+// MAP
+// ============================================================
+// Approximate % positions within the mapCanvas for key cities
+const CITY_POSITIONS = {
+  'Greenville, SC': {x:16,y:58},
+  'Spartanburg, SC': {x:22,y:53},
+  'Charlotte, NC': {x:37,y:38},
+  'Columbia, SC': {x:38,y:68},
+  'Charleston, SC': {x:56,y:84},
+  'Raleigh, NC': {x:66,y:32},
+  'Wilmington, NC': {x:76,y:60},
+  'Mauldin, SC': {x:17,y:60},
+};
+function getPos(deal) {
+  if (CITY_POSITIONS[deal.location]) return CITY_POSITIONS[deal.location];
+  // fallback by keyword
+  const l = deal.location.toLowerCase();
+  if (l.includes('york') || l.includes('rock hill')) return {x:32,y:43};
+  if (l.includes('greenville')) return {x:16,y:58};
+  if (l.includes('charlotte')) return {x:37,y:38};
+  if (l.includes('columbia')) return {x:38,y:68};
+  if (l.includes('charleston')) return {x:56,y:84};
+  if (l.includes('raleigh')) return {x:66,y:32};
+  if (l.includes('wilmington')) return {x:76,y:60};
+  if (l.includes('spartanburg')) return {x:22,y:53};
+  return {x:40,y:50};
+}
+function renderMap() {
+  const mapDeals = STATE.deals.filter(d=>d.stage!=='closed');
+  document.getElementById('mapCount').textContent = mapDeals.length;
+  // Pins
+  const pinsContainer = document.getElementById('mapPins');
+  pinsContainer.innerHTML = mapDeals.map((d,i) => {
+    const pos = getPos(d);
+    return `<div class="pin ${d.type} ${d.id===STATE.selectedMapDeal?'active':''}" data-did="${d.id}" style="left:${pos.x}%;top:${pos.y}%" onclick="selectMapDeal('${d.id}')">
+      <div class="pin-head"><span>${i+1}</span></div>
+      <div class="pin-lbl">${d.location.split(',')[0]}</div>
+    </div>`;
+  }).join('');
+  // Rows
+  document.getElementById('mapRows').innerHTML = `<div class="panel-b" style="padding:8px 0;">` + mapDeals.map((d,i) => `
+    <div class="drow ${d.type} ${d.id===STATE.selectedMapDeal?'sel':''}" data-did="${d.id}" onclick="selectMapDeal('${d.id}')">
+      <span class="pn">${i+1}</span>
+      <div><div class="dn">${d.name}</div><div class="dl">${d.location} · ${STAGES.find(s=>s.id===d.stage)?.label||d.stage} · ${fmtMoney(d.value)}</div></div>
+      <span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span>
+    </div>`).join('') + '</div>';
+}
+function selectMapDeal(id) {
+  STATE.selectedMapDeal = id;
+  saveState();
+  document.querySelectorAll('.pin').forEach(p => p.classList.toggle('active', p.dataset.did===id));
+  document.querySelectorAll('.drow').forEach(r => r.classList.toggle('sel', r.dataset.did===id));
+  const row = document.querySelector(`.drow[data-did="${id}"]`);
+  if (row) row.scrollIntoView({block:'nearest',behavior:'smooth'});
+  // update pin number circles too
+  renderMap();
+}
+function toggleMapFilter(btn, type) {
+  btn.dataset.on = btn.dataset.on === 'true' ? 'false' : 'true';
+  btn.classList.toggle('on', btn.dataset.on === 'true');
+  renderMap();
+}
+
+// ============================================================
+// MODALS
+// ============================================================
+function openModal(type, data={}) {
+  const backdrop = document.getElementById('modalBackdrop');
+  const box = document.getElementById('modalBox');
+  backdrop.style.display = 'flex';
+  if (type === 'task') box.innerHTML = taskModalHTML(data);
+  else if (type === 'deal') box.innerHTML = dealModalHTML(data);
+  else if (type === 'contact') box.innerHTML = contactModalHTML(data);
+  else if (type === 'quickadd') box.innerHTML = quickAddHTML();
+}
+function closeModal() {
+  document.getElementById('modalBackdrop').style.display = 'none';
+}
+function openAddTask(dayStr) { openModal('task',{day:dayStr}); }
+function openEditDeal(id) {
+  const d = STATE.deals.find(x=>x.id===id);
+  if (d) openModal('deal',d);
+}
+function openModalForStage(stage) { openModal('deal',{stage}); }
+function openEditContact(id) {
+  const c = STATE.contacts.find(x=>x.id===id);
+  if (c) openModal('contact',c);
+}
+function openQuickAdd() { openModal('quickadd'); }
+function openSearch() { showTab('contacts'); document.getElementById('contactSearch').focus(); }
+
+function taskModalHTML(data={}) {
+  const days = [];
+  const mon = currentWeekMonday();
+  for(let i=0;i<5;i++){const d=new Date(mon);d.setDate(d.getDate()+i);days.push({val:fmt(d),label:d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});}
+  const daysOptions = days.map(d=>`<option value="${d.val}" ${data.day===d.val?'selected':''}>${d.label}</option>`).join('');
+  const projectOpts = [...new Set(STATE.deals.map(d=>d.name)),...new Set(STATE.tasks.map(t=>t.projectId))].filter(Boolean).map(p=>`<option value="${p}" ${data.projectId===p?'selected':''}>${p}</option>`).join('');
+  return `
+    <div class="modal-h"><h3>${data.id?'Edit task':'Add task'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-b">
+      <div class="form-row"><label>Task title</label><input id="f-title" type="text" value="${data.title||''}" placeholder="e.g. Call back J. Mercer" /></div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Type</label>
+          <select id="f-type">
+            <option value="brok" ${data.type==='brok'?'selected':''}>Brokerage</option>
+            <option value="dev" ${data.type==='dev'?'selected':''}>Development</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin:0"><label>Day</label>
+          <select id="f-day">${daysOptions}</select>
+        </div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Time (optional)</label><input id="f-time" type="text" value="${data.time||''}" placeholder="e.g. 10:30a"/></div>
+        <div class="form-row" style="margin:0"><label>Project / deal</label>
+          <select id="f-proj"><option value="">— none —</option>${projectOpts}</select>
+        </div>
+      </div>
+      <div class="form-row"><label>Status badge (optional)</label>
+        <select id="f-dueType">
+          <option value="">None</option>
+          <option value="time" ${data.dueType==='time'?'selected':''}>Time</option>
+          <option value="today" ${data.dueType==='today'?'selected':''}>Due today</option>
+          <option value="over" ${data.dueType==='over'?'selected':''}>Overdue</option>
+          <option value="good" ${data.dueType==='good'?'selected':''}>Good</option>
+        </select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteTaskById('${data.id}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveTask('${data.id||''}')">Save task</button>
+    </div>`;
+}
+function saveTask(existingId) {
+  const title = document.getElementById('f-title').value.trim();
+  if (!title) { toast('Please enter a task title.'); return; }
+  const type = document.getElementById('f-type').value;
+  const day = document.getElementById('f-day').value;
+  const time = document.getElementById('f-time').value.trim();
+  const proj = document.getElementById('f-proj').value;
+  const dueType = document.getElementById('f-dueType').value;
+  if (existingId) {
+    const t = STATE.tasks.find(x=>x.id===existingId);
+    if (t) Object.assign(t,{title,type,day,time,projectId:proj,dueType,dueBadge:time||''});
+  } else {
+    STATE.tasks.push({id:uid(),title,type,day,time,projectId:proj,dueType,dueBadge:time||'',done:false});
+  }
+  saveState(); closeModal(); renderWeek(); renderKPIs();
+  toast(existingId ? 'Task updated.' : 'Task added.');
+}
+function deleteTaskById(id) {
+  if (!confirm('Delete task?')) return;
+  STATE.tasks = STATE.tasks.filter(x=>x.id!==id);
+  saveState(); closeModal(); renderWeek(); renderKPIs();
+  toast('Task deleted.');
+}
+
+function dealModalHTML(data={}) {
+  const stageOpts = STAGES.map(s=>`<option value="${s.id}" ${data.stage===s.id?'selected':''}>${s.label}</option>`).join('');
+  return `
+    <div class="modal-h"><h3>${data.id?'Edit deal':'Add deal'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-b">
+      <div class="form-row"><label>Deal name</label><input id="f-dname" type="text" value="${data.name||''}" placeholder="e.g. Rock Hill Distribution Center"/></div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Type</label>
+          <select id="f-dtype">
+            <option value="brok" ${data.type==='brok'?'selected':''}>Brokerage</option>
+            <option value="dev" ${data.type==='dev'?'selected':''}>Development</option>
+          </select>
+        </div>
+        <div class="form-row" style="margin:0"><label>Stage</label><select id="f-dstage">${stageOpts}</select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Location</label><input id="f-dloc" type="text" value="${data.location||''}" placeholder="e.g. York County, SC"/></div>
+        <div class="form-row" style="margin:0"><label>Size / desc</label><input id="f-dsize" type="text" value="${data.size||''}" placeholder="e.g. 45k sf · lease"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Deal value ($)</label><input id="f-dval" type="number" value="${data.value||''}" placeholder="2000000"/></div>
+        <div class="form-row" style="margin:0"><label>Heat (0–4)</label>
+          <select id="f-dlevel">
+            ${[0,1,2,3,4].map(n=>`<option value="${n}" ${data.level===n?'selected':''}>${n} — ${['None','Cold','Warm','Hot','Max'][n]}</option>`).join('')}
+          </select>
+        </div>
+      </div>
+      ${data.stage==='closed'?`<div class="form-row"><label>Commission ($)</label><input id="f-dfee" type="number" value="${data.fee||''}" placeholder="42000"/></div>`:''}
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteDeal('${data.id}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveDeal('${data.id||''}')">Save deal</button>
+    </div>`;
+}
+function saveDeal(existingId) {
+  const name = document.getElementById('f-dname').value.trim();
+  if (!name) { toast('Please enter a deal name.'); return; }
+  const type = document.getElementById('f-dtype').value;
+  const stage = document.getElementById('f-dstage').value;
+  const location = document.getElementById('f-dloc').value.trim();
+  const size = document.getElementById('f-dsize').value.trim();
+  const value = parseInt(document.getElementById('f-dval').value)||0;
+  const level = parseInt(document.getElementById('f-dlevel').value)||0;
+  const feeEl = document.getElementById('f-dfee');
+  const fee = feeEl ? parseInt(feeEl.value)||0 : 0;
+  if (existingId) {
+    const d = STATE.deals.find(x=>x.id===existingId);
+    if (d) Object.assign(d,{name,type,stage,location,size,value,level,fee});
+  } else {
+    STATE.deals.push({id:uid(),name,type,stage,location,size,value,level,fee});
+  }
+  saveState(); closeModal(); renderDeals(); renderKPIs(); renderMap();
+  toast(existingId ? 'Deal updated.' : 'Deal added.');
+}
+function deleteDeal(id) {
+  if (!confirm('Delete this deal?')) return;
+  STATE.deals = STATE.deals.filter(x=>x.id!==id);
+  saveState(); closeModal(); renderDeals(); renderKPIs(); renderMap();
+  toast('Deal deleted.');
+}
+
+function contactModalHTML(data={}) {
+  const typeOpts = ['Broker','Developer','Tenant','Investor','Lender','Other'].map(t=>`<option value="${t}" ${data.type===t?'selected':''}>${t}</option>`).join('');
+  const dealOpts = STATE.deals.map(d=>`<option value="${d.id}" ${(data.linkedDeals||[]).includes(d.id)?'selected':''}>${d.name}</option>`).join('');
+  return `
+    <div class="modal-h"><h3>${data.id?'Edit contact':'Add contact'}</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-b">
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Full name</label><input id="f-cname" type="text" value="${data.name||''}" placeholder="Jane Smith"/></div>
+        <div class="form-row" style="margin:0"><label>Type</label><select id="f-ctype">${typeOpts}</select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Company</label><input id="f-cco" type="text" value="${data.company||''}" placeholder="Acme Realty"/></div>
+        <div class="form-row" style="margin:0"><label>Role / title</label><input id="f-crole" type="text" value="${data.role||''}" placeholder="Tenant rep"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Phone</label><input id="f-cphone" type="text" value="${data.phone||''}" placeholder="(864) 555-0100"/></div>
+        <div class="form-row" style="margin:0"><label>Email</label><input id="f-cemail" type="email" value="${data.email||''}" placeholder="jane@company.com"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Last contact</label><input id="f-clast" type="date" value="${data.lastContact||''}"/></div>
+        <div class="form-row" style="margin:0"><label>Follow-up date</label><input id="f-cfu" type="date" value="${data.followUpDate||''}"/></div>
+      </div>
+      <div class="form-row"><label>Follow-up note</label><input id="f-cfunote" type="text" value="${data.followUpNote||''}" placeholder="e.g. Call re: LOI terms"/></div>
+      <div class="form-row"><label>Linked deals (hold Ctrl/Cmd to multi-select)</label>
+        <select id="f-cdeals" multiple style="height:100px;">${dealOpts}</select>
+      </div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteContactById('${data.id}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveContact('${data.id||''}')">Save contact</button>
+    </div>`;
+}
+function saveContact(existingId) {
+  const name = document.getElementById('f-cname').value.trim();
+  if (!name) { toast('Please enter a name.'); return; }
+  const type = document.getElementById('f-ctype').value;
+  const company = document.getElementById('f-cco').value.trim();
+  const role = document.getElementById('f-crole').value.trim();
+  const phone = document.getElementById('f-cphone').value.trim();
+  const email = document.getElementById('f-cemail').value.trim();
+  const lastContact = document.getElementById('f-clast').value;
+  const followUpDate = document.getElementById('f-cfu').value;
+  const followUpNote = document.getElementById('f-cfunote').value.trim();
+  const dealsEl = document.getElementById('f-cdeals');
+  const linkedDeals = Array.from(dealsEl.selectedOptions).map(o=>o.value);
+  const ini = initials(name);
+  if (existingId) {
+    const c = STATE.contacts.find(x=>x.id===existingId);
+    if (c) Object.assign(c,{name,type,company,role,phone,email,lastContact,followUpDate,followUpNote,linkedDeals,ini});
+  } else {
+    STATE.contacts.push({id:uid(),name,type,company,role,phone,email,lastContact,followUpDate,followUpNote,linkedDeals,ini,log:[]});
+  }
+  saveState(); closeModal(); renderContacts(); renderFollowups(); renderKPIs();
+  toast(existingId ? 'Contact updated.' : 'Contact added.');
+}
+function deleteContactById(id) {
+  if (!confirm('Delete contact?')) return;
+  STATE.contacts = STATE.contacts.filter(x=>x.id!==id);
+  STATE.selectedContact = STATE.contacts[0]?.id||'';
+  saveState(); closeModal(); renderContacts(); renderFollowups(); renderKPIs();
+  toast('Contact deleted.');
+}
+
+function quickAddHTML() {
+  return `
+    <div class="modal-h"><h3>Quick add</h3><button class="modal-close" onclick="closeModal()">×</button></div>
+    <div class="modal-b" style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px;text-align:center;">
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('task',{day:'${todayStr()}'})">
+        <div style="font-size:28px;margin-bottom:8px;">📋</div>
+        <div style="font-weight:600;font-size:14px;">Task</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to this week</div>
+      </div>
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('deal',{})">
+        <div style="font-size:28px;margin-bottom:8px;">🏢</div>
+        <div style="font-weight:600;font-size:14px;">Deal</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to pipeline</div>
+      </div>
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('contact',{})">
+        <div style="font-size:28px;margin-bottom:8px;">👤</div>
+        <div style="font-weight:600;font-size:14px;">Contact</div>
+        <div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to CRM</div>
+      </div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button></div>`;
+}
+
+// ============================================================
+// DATA EXPORT / RESET
+// ============================================================
+function exportData() {
+  const blob = new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `cre-hq-backup-${todayStr()}.json`;
+  a.click();
+  toast('Backup exported.');
+}
+function resetData() {
+  if (!confirm('Reset all data to sample state? This cannot be undone.')) return;
+  localStorage.removeItem(STORE_KEY);
+  STATE = defaultState();
+  saveState();
+  init();
+  toast('Data reset to sample.');
+}
+
+// ============================================================
+// LIVE RATES (FRED API — requires API key, falls back gracefully)
+// ============================================================
+async function fetchRates() {
+  // Show the date last updated
+  document.getElementById('ratesDate').textContent = `Updated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+  // In production: wire FRED API key and fetch DGS10 + SOFR
+  // For now the sample data is displayed; update below when you have a FRED key:
+  // const key = 'YOUR_FRED_KEY';
+  // const res = await fetch(`https://api.stlouisfed.org/fred/series/observations?series_id=DGS10&api_key=${key}&sort_order=desc&limit=1&file_type=json`);
+}
+
+// ============================================================
+// INIT
+// ============================================================
+function init() {
+  applyTheme();
+  showTab(STATE.activeTab||'home');
+  renderNews();
+  renderWeek();
+  renderKPIs();
+  renderProjects();
+  renderFollowups();
+  renderDeals();
+  renderContacts();
+  renderMap();
+  fetchRates();
+  document.getElementById('filter-brok').classList.toggle('on', STATE.filterBrok !== false);
+  document.getElementById('filter-dev').classList.toggle('on', STATE.filterDev !== false);
+  document.getElementById('deal-filter-brok').classList.toggle('on', STATE.dealFilterBrok !== false);
+  document.getElementById('deal-filter-dev').classList.toggle('on', STATE.dealFilterDev !== false);
+}
+init();
+</script>
+</body>
+</html>
