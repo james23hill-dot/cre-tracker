@@ -532,10 +532,9 @@ html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
       <div class="map-nc-label">NORTH CAROLINA</div><div class="map-sc-label">SOUTH CAROLINA</div>
       <div class="maptools"><button class="chip brok on" data-on="true" onclick="toggleMapFilter(this,'brok')">Brok</button><button class="chip dev on" data-on="true" onclick="toggleMapFilter(this,'dev')">Dev</button></div>
       <div class="mapzoom"><button onclick="toast('Wire to Mapbox for geo')">+</button><button onclick="toast('Wire to Mapbox for geo')">&minus;</button></div>
-      <div id="mapPins"></div>
       <div class="wm">NC + SC &middot; wire to Mapbox / MapLibre for production tiles</div>
     </div>
-    <div class="panel maplist"><div class="panel-h"><h3>Deals on map</h3><span class="sub" id="mapCount">0</span></div><div id="mapRows"></div></div>
+
   </div>
   <div class="legend"><span class="li"><span class="sw" style="background:var(--brok)"></span> Brokerage</span><span class="li"><span class="sw" style="background:var(--dev)"></span> Development</span><span class="li faint" style="font-size:12px;">Click a pin or row to sync.</span></div>
 </section>
@@ -724,7 +723,7 @@ function reRenderAll(){
   applyTheme();
   showTab(STATE.activeTab||'home');
   renderWeek();renderKPIs();renderProjects();renderFollowups();
-  renderDeals();renderContacts();renderMap();renderTenants();
+  renderDeals();renderContacts();renderTenants();
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
@@ -1156,7 +1155,6 @@ function toggleDealFilter(type){if(type==='brok')STATE.dealFilterBrok=!STATE.dea
 function renderDeals(){
   const active=STATE.deals.filter(d=>d.stage!=='closed');
   document.getElementById('deal-summary').textContent=`${active.length} active deals \u00b7 ${fmtMoney(active.reduce((s,d)=>s+dealFee(d),0))} gross fees`;
-  document.getElementById('tab-map-count').textContent=active.length;
   document.getElementById('kanban').innerHTML=STAGES.map(stage=>{
     let deals=STATE.deals.filter(d=>d.stage===stage.id);
     if(!STATE.dealFilterBrok)deals=deals.filter(d=>d.type!=='brok');
@@ -1209,14 +1207,9 @@ function logInteraction(id){const c=STATE.contacts.find(x=>x.id===id);if(!c)retu
 // Map
 const CITY_POSITIONS={'Greenville, SC':{x:16,y:58},'Spartanburg, SC':{x:22,y:53},'Charlotte, NC':{x:37,y:38},'Columbia, SC':{x:38,y:68},'Charleston, SC':{x:56,y:84},'Raleigh, NC':{x:66,y:32},'Wilmington, NC':{x:76,y:60},'Mauldin, SC':{x:17,y:60}};
 function getPos(deal){if(CITY_POSITIONS[deal.location])return CITY_POSITIONS[deal.location];const l=deal.location.toLowerCase();if(l.includes('greenville'))return{x:16,y:58};if(l.includes('charlotte'))return{x:37,y:38};if(l.includes('columbia'))return{x:38,y:68};if(l.includes('charleston'))return{x:56,y:84};if(l.includes('raleigh'))return{x:66,y:32};if(l.includes('wilmington'))return{x:76,y:60};if(l.includes('spartanburg'))return{x:22,y:53};return{x:40,y:50};}
-function renderMap(){
-  const mapDeals=STATE.deals.filter(d=>d.stage!=='closed');
-  document.getElementById('mapCount').textContent=mapDeals.length;
-  document.getElementById('mapPins').innerHTML=mapDeals.map((d,i)=>{const pos=getPos(d);return`<div class="pin ${d.type} ${d.id===STATE.selectedMapDeal?'active':''}" data-did="${d.id}" style="left:${pos.x}%;top:${pos.y}%" onclick="selectMapDeal('${d.id}')"><div class="pin-head"><span>${i+1}</span></div><div class="pin-lbl">${d.location.split(',')[0]}</div></div>`;}).join('');
-  document.getElementById('mapRows').innerHTML='<div class="panel-b" style="padding:8px 0;">'+mapDeals.map((d,i)=>`<div class="drow ${d.type} ${d.id===STATE.selectedMapDeal?'sel':''}" data-did="${d.id}" onclick="selectMapDeal('${d.id}')"><span class="pn">${i+1}</span><div><div class="dn">${d.name}</div><div class="dl">${d.location} &middot; ${STAGES.find(s=>s.id===d.stage)?.label||d.stage} &middot; ${fmtMoney(d.value)}</div></div><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>`).join('')+'</div>';
-}
-function selectMapDeal(id){STATE.selectedMapDeal=id;saveState();renderMap();document.querySelector(`.drow[data-did="${id}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'});}
-function toggleMapFilter(btn,type){btn.dataset.on=btn.dataset.on==='true'?'false':'true';btn.classList.toggle('on',btn.dataset.on==='true');renderMap();}
+function renderMap(){}
+function selectMapDeal(id){STATE.selectedMapDeal=id;saveState();document.querySelector(`.drow[data-did="${id}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'});}
+function toggleMapFilter(btn,type){btn.dataset.on=btn.dataset.on==='true'?'false':'true';btn.classList.toggle('on',btn.dataset.on==='true');}
 
 // Modals
 function openModal(type,data={}){const backdrop=document.getElementById('modalBackdrop'),box=document.getElementById('modalBox');backdrop.style.display='flex';if(type==='task')renderTaskModal(box,data);else if(type==='deal')renderDealModal(box,data);else if(type==='contact')box.innerHTML=contactModalHTML(data);else if(type==='project')box.innerHTML=projectModalHTML(data);else if(type==='tenant')box.innerHTML=tenantModalHTML(data);else if(type==='quickadd')box.innerHTML=quickAddHTML();}
@@ -1406,12 +1399,12 @@ function saveDeal(existingId){
       STATE.tasks.push({id:uid(),title:fuTitle,type,day:dealFollowUp,time:'',projectId,done:false,importance:3,followUpDate:''});
     }
   }
-  saveState();closeModal();renderDeals();renderKPIs();renderMap();renderContacts();renderContactDetail(STATE.selectedContact);renderProjectsTab();renderWeek();
+  saveState();closeModal();renderDeals();renderKPIs();renderContacts();renderContactDetail(STATE.selectedContact);renderProjectsTab();renderWeek();
   const newCount=selectedDealContacts.filter(c=>c.isNew).length;
   toast(existingId?`Deal updated \u00b7 ${finalContactIds.length} contact(s) linked`:`Deal added \u00b7 ${finalContactIds.length} contact(s) linked${newCount?` \u00b7 ${newCount} new contact(s) created`:''}${dealFollowUp?' \u00b7 Follow-up task created.':''}`);
   selectedDealContacts=[];
 }
-function deleteDeal(id){if(!confirm('Delete this deal?'))return;STATE.deals=STATE.deals.filter(x=>x.id!==id);saveState();closeModal();renderDeals();renderKPIs();renderMap();toast('Deal deleted.');}
+function deleteDeal(id){if(!confirm('Delete this deal?'))return;STATE.deals=STATE.deals.filter(x=>x.id!==id);saveState();closeModal();renderDeals();renderKPIs();toast('Deal deleted.');}
 
 // Contact modal
 function contactModalHTML(data={}){
@@ -1936,7 +1929,7 @@ function init(){
   fetchNews();renderWeek();renderKPIs();renderProjects();renderFollowups();
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
-  renderDeals();renderContacts();renderMap();renderTenants();syncAllTenantContacts();fetchRates();initMsal();
+  renderDeals();renderContacts();renderTenants();syncAllTenantContacts();fetchRates();initMsal();
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
   document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
   document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
