@@ -709,44 +709,49 @@ const NEWS_API_KEY='260b9efbee434627bfbb5fa41dc1cf74';
 async function fetchNews(){
   const panel=document.getElementById('newsPanel');
   panel.innerHTML='<div style="padding:12px 0;color:var(--ink-3);font-size:13px;text-align:center;">Loading live news&hellip;</div>';
-  // Use multiple CRE RSS feeds via rss2json proxy (works from any hosted domain)
+  // CRE RSS feeds via rss2json.com API key (free tier, works from hosted sites)
   const feeds=[
-    {url:'https://www.globest.com/feed/',geo:'National',outlet:'GlobeSt'},
-    {url:'https://www.bisnow.com/rss',geo:'SE Region',outlet:'Bisnow'},
-    {url:'https://www.costar.com/rss/news',geo:'National',outlet:'CoStar'},
+    {url:'https://www.globest.com/feed/',outlet:'GlobeSt'},
+    {url:'https://www.bisnow.com/national/news/rss',outlet:'Bisnow'},
+    {url:'https://therealdeal.com/feed/',outlet:'The Real Deal'},
+    {url:'https://www.commercialobserver.com/feed/',outlet:'Commercial Observer'},
   ];
-  const API='https://api.rss2json.com/v1/api.json?rss_url=';
-  try{
-    const results=await Promise.allSettled(feeds.map(f=>fetch(`${API}${encodeURIComponent(f.url)}&count=5`).then(r=>r.json()).then(d=>({...d,geo:f.geo,outlet:f.outlet}))));
-    let articles=[];
-    results.forEach(r=>{
-      if(r.status==='fulfilled'&&r.value.status==='ok'){
-        (r.value.items||[]).forEach(item=>{
+  let articles=[];
+  await Promise.allSettled(feeds.map(async f=>{
+    try{
+      const res=await fetch(`https://api.rss2json.com/v1/api.json?rss_url=${encodeURIComponent(f.url)}&count=6&api_key=free`);
+      const data=await res.json();
+      if(data.items){
+        data.items.forEach(item=>{
           const text=(item.title+' '+(item.description||'')).toLowerCase();
-          let geo=r.value.geo;
+          let geo='National';
           if(text.includes('york county')||text.includes('rock hill'))geo='York County';
           else if(text.includes('greenville'))geo='Greenville';
           else if(text.includes('charlotte'))geo='Charlotte';
           else if(text.includes('charleston'))geo='Charleston';
-          else if(text.includes('columbia'))geo='Columbia';
-          else if(text.includes('raleigh'))geo='Raleigh';
+          else if(text.includes('columbia, sc'))geo='Columbia';
+          else if(text.includes('raleigh')||text.includes('triangle'))geo='Raleigh';
           else if(text.includes('spartanburg'))geo='Spartanburg';
           else if(text.includes('wilmington'))geo='Wilmington';
-          else if(text.includes('south carolina')||text.includes(' sc '))geo='SC';
-          else if(text.includes('north carolina')||text.includes(' nc '))geo='NC';
-          articles.push({title:item.title,url:item.link,geo,outlet:r.value.outlet,pubDate:item.pubDate});
+          else if(text.includes('south carolina')||text.includes(', sc'))geo='SC';
+          else if(text.includes('north carolina')||text.includes(', nc'))geo='NC';
+          else if(text.includes('carolina'))geo='Carolinas';
+          articles.push({title:item.title,url:item.link,geo,outlet:f.outlet,pubDate:new Date(item.pubDate)});
         });
       }
-    });
-    articles.sort((a,b)=>new Date(b.pubDate)-new Date(a.pubDate));
-    if(articles.length>0){
-      panel.innerHTML=articles.slice(0,8).map(a=>{
-        const diff=Math.floor((Date.now()-new Date(a.pubDate))/60000);
-        const ago=diff<60?diff+'m ago':diff<1440?Math.floor(diff/60)+'h ago':Math.floor(diff/1440)+'d ago';
-        return`<div class="item"><div class="src"><span class="geo">${a.geo}</span> &middot; ${a.outlet} <span style="float:right;font-size:10px">${ago}</span></div><div class="hl" onclick="window.open('${a.url}','_blank')">${(a.title||'').slice(0,88)}${(a.title||'').length>88?'&hellip;':''}</div></div>`;
-      }).join('');
-    } else renderNewsFallback();
-  }catch(e){renderNewsFallback();}
+    }catch(e){}
+  }));
+  articles.sort((a,b)=>b.pubDate-a.pubDate);
+  if(articles.length>0){
+    panel.innerHTML=articles.slice(0,8).map(a=>{
+      const diff=Math.floor((Date.now()-a.pubDate)/60000);
+      const ago=diff<60?diff+'m ago':diff<1440?Math.floor(diff/60)+'h ago':Math.floor(diff/1440)+'d ago';
+      const safeUrl=(a.url||'').replace(/'/g,'%27');
+      return`<div class="item"><div class="src"><span class="geo">${a.geo}</span> &middot; ${a.outlet} <span style="float:right;font-size:10px">${ago}</span></div><div class="hl" style="cursor:pointer" onclick="window.open('${safeUrl}','_blank')">${(a.title||'').slice(0,90)}${(a.title||'').length>90?'&hellip;':''}</div></div>`;
+    }).join('');
+  } else {
+    renderNewsFallback();
+  }
 }
 function renderNewsFallback(){document.getElementById('newsPanel').innerHTML=STATE.news.slice(0,6).map(n=>`<div class="item"><div class="src"><span class="geo">${n.geo}</span> &middot; ${n.outlet}</div><div class="hl">${n.hl}</div></div>`).join('');}
 
