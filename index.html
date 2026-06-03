@@ -880,21 +880,47 @@ function addWorkItem(projId){
   const p=STATE.projects.find(x=>x.id===projId);
   if(!p)return;
   if(!p.workItems)p.workItems=[];
-  p.workItems.push({id:uid(),title:title.trim(),status:'todo',due:due&&due.trim()||''});
-  saveState();renderProjectsTab();toast('Work item added.');
+  const wiId=uid();
+  const dueClean=due&&due.trim()||'';
+  p.workItems.push({id:wiId,title:title.trim(),status:'todo',due:dueClean});
+  // Auto-create a task on the due date if one was set
+  if(dueClean){
+    const taskTitle=title.trim();
+    const alreadyExists=STATE.tasks.some(t=>t.title===taskTitle&&t.day===dueClean);
+    if(!alreadyExists){
+      STATE.tasks.push({
+        id:uid(),title:taskTitle,type:p.type||'dev',day:dueClean,
+        time:'',projectId:projId,done:false,importance:3,
+        followUpDate:'',contactId:'',workItemId:wiId
+      });
+    }
+    toast('Work item added · Task created for '+fmtDisplay(dueClean));
+  } else {
+    toast('Work item added.');
+  }
+  saveState();renderProjectsTab();renderWeek();renderKPIs();
 }
 function cycleWorkItemStatus(projId,idx){
   const p=STATE.projects.find(x=>x.id===projId);
   if(!p||!p.workItems[idx])return;
   const cycle={todo:'inprogress',inprogress:'done',done:'todo'};
-  p.workItems[idx].status=cycle[p.workItems[idx].status]||'todo';
-  saveState();renderProjectsTab();renderProjects();
+  const wi=p.workItems[idx];
+  wi.status=cycle[wi.status]||'todo';
+  // Sync task done state if linked
+  if(wi.id){
+    const linkedTask=STATE.tasks.find(t=>t.workItemId===wi.id);
+    if(linkedTask) linkedTask.done=(wi.status==='done');
+  }
+  saveState();renderProjectsTab();renderProjects();renderWeek();
 }
 function deleteWorkItem(projId,idx){
   const p=STATE.projects.find(x=>x.id===projId);
   if(!p)return;
+  const wi=p.workItems[idx];
+  // Remove linked task if it exists
+  if(wi&&wi.id) STATE.tasks=STATE.tasks.filter(t=>t.workItemId!==wi.id);
   p.workItems.splice(idx,1);
-  saveState();renderProjectsTab();toast('Work item deleted.');
+  saveState();renderProjectsTab();renderWeek();renderKPIs();toast('Work item deleted.');
 }
 // Suite / Lease Tracker
 function addSuite(projId){
