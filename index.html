@@ -701,27 +701,35 @@ async function pullFromSupabase(){
     if(error||!data) return;
     const remote = data.data;
     if(!remote||!remote.tasks) return;
-    // Merge: use remote if it's newer than local
     const localTs = STATE._savedAt || 0;
     const remoteTs = new Date(data.updated_at).getTime();
     if(remoteTs > localTs){
+      // Merge remote data but always keep code-defined tenants if remote has none
+      const defaults = defaultState();
       STATE = remote;
       STATE._savedAt = remoteTs;
+      // If remote has no tenants (old save), inject defaults
+      if(!STATE.tenants||STATE.tenants.length===0){
+        STATE.tenants = defaults.tenants;
+      }
       try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
-      // Re-render everything with fresh data
-      applyTheme();
-      showTab(STATE.activeTab||'home');
-      renderWeek();renderKPIs();renderProjects();renderFollowups();
-      renderDeals();renderContacts();renderMap();
-      document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
-      document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
-      document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
-      document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
-      document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
-      document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev!==false);
+      reRenderAll();
       toast('Data synced from cloud ☁️');
     }
   }catch(e){console.warn('Supabase pull failed:',e);}
+}
+
+function reRenderAll(){
+  applyTheme();
+  showTab(STATE.activeTab||'home');
+  renderWeek();renderKPIs();renderProjects();renderFollowups();
+  renderDeals();renderContacts();renderMap();renderTenants();
+  document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
+  document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
+  document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
+  document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
+  document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
+  document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev!==false);
 }
 
 // Subscribe to real-time changes from other devices
@@ -737,8 +745,8 @@ function subscribeToSupabase(){
           STATE=remote;
           STATE._savedAt=remoteTs;
           try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
-          renderWeek();renderKPIs();renderProjects();renderFollowups();
-          renderDeals();renderContacts();renderMap();
+          if(!STATE.tenants||STATE.tenants.length===0) STATE.tenants=defaultState().tenants;
+          reRenderAll();
           toast('Synced from another device ☁️');
         }
       })
