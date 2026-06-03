@@ -301,6 +301,43 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 .cal-event.all-day{border-left-color:#5b8a5e;}
 .cal-divider{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);padding:6px 2px 3px;display:flex;align-items:center;gap:6px;}
 .cal-divider::after{content:"";flex:1;height:1px;background:var(--line-2);}
+
+/* WORK ITEMS */
+.work-items-section{border-top:1px solid var(--line-2);padding:10px 16px;}
+.work-items-section .wi-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:8px;display:flex;align-items:center;justify-content:space-between;}
+.work-item{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-2);font-size:13px;}
+.work-item:last-child{border-bottom:none;}
+.work-item .wi-status{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:99px;white-space:nowrap;flex-shrink:0;}
+.wi-todo{background:var(--surface-3);color:var(--ink-3);}
+.wi-inprogress{background:var(--brok-soft);color:var(--brok);}
+.wi-done{background:var(--good-soft);color:var(--good);}
+.work-item .wi-title{flex:1;}
+.work-item.wi-done-item .wi-title{color:var(--ink-3);text-decoration:line-through;}
+.work-item .wi-due{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);}
+.work-item .wi-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;}
+.work-item:hover .wi-actions{opacity:1;}
+.work-item .wi-actions button{background:none;border:none;color:var(--ink-3);font-size:11px;padding:2px 4px;border-radius:4px;cursor:pointer;}
+.work-item .wi-actions button:hover{color:var(--danger);background:var(--danger-soft);}
+/* LEASE TRACKER */
+.lease-section{border-top:1px solid var(--line-2);padding:12px 16px;}
+.lease-section .ls-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:10px;display:flex;align-items:center;justify-content:space-between;}
+.lease-bar-wrap{margin-bottom:12px;}
+.lease-bar-wrap .lb-label{display:flex;justify-content:space-between;font-size:12px;color:var(--ink-2);margin-bottom:5px;}
+.lease-bar-wrap .lb-pct{font-family:var(--mono);font-weight:600;color:var(--good);}
+.lease-bar{height:10px;border-radius:99px;background:var(--surface-3);overflow:hidden;}
+.lease-bar .lb-fill{height:100%;border-radius:99px;background:var(--good);transition:width .4s;}
+.suite-row{display:grid;grid-template-columns:1fr auto auto auto;gap:8px;align-items:center;padding:7px 0;border-bottom:1px solid var(--line-2);font-size:13px;}
+.suite-row:last-child{border-bottom:none;}
+.suite-row .sr-name{font-weight:500;}
+.suite-row .sr-sf{font-family:var(--mono);font-size:11.5px;color:var(--ink-3);}
+.suite-row .sr-status{font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;}
+.sr-leased{background:var(--good-soft);color:var(--good);}
+.sr-available{background:var(--danger-soft);color:var(--danger);}
+.sr-loi{background:var(--dev-soft);color:var(--dev);}
+.suite-row .sr-actions{display:flex;gap:4px;opacity:0;transition:opacity .15s;}
+.suite-row:hover .sr-actions{opacity:1;}
+.suite-row .sr-actions button{background:none;border:none;color:var(--ink-3);font-size:11px;padding:2px 4px;border-radius:4px;cursor:pointer;}
+.suite-row .sr-actions button:hover{color:var(--danger);background:var(--danger-soft);}
 </style>
 </head>
 <body>
@@ -748,7 +785,11 @@ function renderKPIs(){
 // Projects
 function renderProjects(){
   const panel=document.getElementById('projectsPanel');
-  if(panel)panel.innerHTML=STATE.projects.slice(0,4).map(p=>`<div class="proj-item" style="cursor:pointer" onclick="showTab('projects')"><div class="pt"><span class="pn">${p.name}</span><span class="tag ${p.type}">${p.type==='dev'?'Dev':'Brok'}</span></div><div class="pm">${p.phase} &middot; next: ${p.nextMilestone}</div><div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div></div>`).join('');
+  if(panel)panel.innerHTML=STATE.projects.slice(0,4).map(p=>{
+    const projTasks=STATE.tasks.filter(t=>t.projectId===p.id||t.projectId===p.name).filter(t=>!t.done).slice(0,3);
+    const taskHtml=projTasks.length?projTasks.map(t=>`<div style="display:flex;align-items:center;gap:6px;padding:3px 0;font-size:12px;color:var(--ink-2)"><span style="width:6px;height:6px;border-radius:50%;background:var(--ink-3);flex-shrink:0"></span>${t.title.slice(0,40)}${t.title.length>40?'&hellip;':''}</div>`).join(''):`<div style="font-size:11.5px;color:var(--ink-3);padding:2px 0;">No open tasks</div>`;
+    return`<div class="proj-item" style="cursor:pointer" onclick="showTab('projects')"><div class="pt"><span class="pn">${p.name}</span><span class="tag ${p.type}">${p.type==='dev'?'Dev':'Brok'}</span></div><div class="pm">${p.phase||'Active'}</div>${taskHtml}</div>`;
+  }).join('');
   renderProjectsTab();
 }
 function renderProjectsTab(){
@@ -764,16 +805,108 @@ function renderProjectsTab(){
     const projTasks=STATE.tasks.filter(t=>t.projectId===p.id||t.projectId===p.name);
     const openT=projTasks.filter(t=>!t.done).length,doneT=projTasks.filter(t=>t.done).length;
     const tasksHtml=projTasks.length?projTasks.slice(0,5).map(t=>`<div class="proj-task-row"><span class="cbx-sm ${t.done?'on':''}"></span><span style="${t.done?'color:var(--ink-3);text-decoration:line-through':''};flex:1">${t.title}</span><span class="badge time" style="font-size:10px">${t.time||fmtDisplay(t.day)}</span></div>`).join('')+(projTasks.length>5?`<div style="font-size:11px;color:var(--ink-3);padding-top:4px">+${projTasks.length-5} more</div>`:''):'<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No tasks yet.</div>';
+    // Work Items
+    const workItems = p.workItems||[];
+    const wiOpen = workItems.filter(w=>w.status!=='done').length;
+    const wiDone = workItems.filter(w=>w.status==='done').length;
+    const wiHtml = workItems.length ? workItems.map((w,i)=>`
+      <div class="work-item ${w.status==='done'?'wi-done-item':''}">
+        <span class="wi-status ${w.status==='done'?'wi-done':w.status==='inprogress'?'wi-inprogress':'wi-todo'}">${w.status==='done'?'Done':w.status==='inprogress'?'In Progress':'To Do'}</span>
+        <span class="wi-title">${w.title}</span>
+        ${w.due?`<span class="wi-due">${fmtDisplay(w.due)}</span>`:''}
+        <span class="wi-actions">
+          <button onclick="cycleWorkItemStatus('${p.id}',${i})" title="Change status">&#8635;</button>
+          <button onclick="deleteWorkItem('${p.id}',${i})" title="Delete">&#10005;</button>
+        </span>
+      </div>`).join('')
+      : '<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No work items yet.</div>';
+
+    // Lease tracker (brokerage projects only)
+    let leaseHtml = '';
+    if(p.type==='brok'){
+      const suites = p.suites||[];
+      const totalSF = suites.reduce((s,su)=>s+(su.sf||0),0);
+      const leasedSF = suites.filter(su=>su.status==='leased').reduce((s,su)=>s+(su.sf||0),0);
+      const pct = totalSF ? Math.round(leasedSF/totalSF*100) : 0;
+      const suitesHtml = suites.length ? suites.map((su,i)=>`
+        <div class="suite-row">
+          <span class="sr-name">${su.name}</span>
+          <span class="sr-sf">${su.sf?su.sf.toLocaleString()+' sf':''}</span>
+          <span class="sr-status ${su.status==='leased'?'sr-leased':su.status==='loi'?'sr-loi':'sr-available'}">${su.status==='leased'?'Leased':su.status==='loi'?'LOI':'Available'}</span>
+          <span class="sr-actions">
+            <button onclick="cycleSuiteStatus('${p.id}',${i})" title="Change status">&#8635;</button>
+            <button onclick="deleteSuite('${p.id}',${i})" title="Delete">&#10005;</button>
+          </span>
+        </div>`).join('')
+        : '<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No suites added yet.</div>';
+      leaseHtml = `<div class="lease-section">
+        <div class="ls-h"><span>&#127970; Lease Tracker</span><button class="btn sm" onclick="addSuite('${p.id}')" style="font-size:11px">+ Add suite</button></div>
+        ${suites.length?`<div class="lease-bar-wrap"><div class="lb-label"><span>${leasedSF.toLocaleString()} sf leased of ${totalSF.toLocaleString()} sf total</span><span class="lb-pct">${pct}% leased</span></div><div class="lease-bar"><div class="lb-fill" style="width:${pct}%"></div></div></div>`:''}
+        ${suitesHtml}
+      </div>`;
+    }
+
     return`<div class="proj-card ${p.type}">
       <div class="proj-card-h"><div><div class="pname">${p.name}</div><div style="display:flex;gap:8px;align-items:center;margin-top:5px;"><span class="tag ${p.type}">${p.type==='dev'?'Development':'Brokerage'}</span>${p.location?`<span style="font-size:12px;color:var(--ink-3)">${p.location}</span>`:''}</div></div><div class="pactions"><button class="btn sm" onclick="openModal('project',STATE.projects.find(x=>x.id==='${p.id}'))">Edit</button><button class="btn sm danger" onclick="deleteProject('${p.id}')">&#10005;</button></div></div>
-      <div class="proj-meta"><span style="font-weight:500">${p.phase}</span> &middot; Next: ${p.nextMilestone}${p.budget?` &middot; Budget: ${fmtMoney(p.budget)}`:''}</div>
+      <div class="proj-meta">${p.phase?`<span style="font-weight:500">${p.phase}</span>`:''}${p.budget?` &middot; Budget: ${fmtMoney(p.budget)}`:''}</div>
       ${p.notes?`<div style="padding:0 16px 10px;font-size:12.5px;color:var(--ink-2);font-style:italic">${p.notes}</div>`:''}
-      <div class="proj-progress"><div class="bar-label"><span>Progress</span><span style="font-family:var(--mono);font-weight:600">${p.progress}%</span></div><div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div></div>
+      ${leaseHtml}
+      <div class="work-items-section"><div class="wi-h"><span>&#128203; Work Items (${wiOpen} open &middot; ${wiDone} done)</span><button class="btn sm" onclick="addWorkItem('${p.id}')" style="font-size:11px">+ Add</button></div>${wiHtml}</div>
       <div class="proj-deals-section"><div class="pdeal-h">Linked deals (${linkedDeals.length})</div>${dealsHtml}<div style="margin-top:8px;"><button class="btn sm" onclick="openModal('deal',{projectId:'${p.id}',type:'${p.type}'})" style="font-size:11.5px">+ Link new deal</button></div></div>
       <div class="proj-tasks-section"><div class="ptask-h">Tasks (${openT} open &middot; ${doneT} done)</div>${tasksHtml}<div style="margin-top:8px;"><button class="btn sm" onclick="openAddTask('${new Date().toISOString().slice(0,10)}','${p.id}')" style="font-size:11.5px">+ Add task</button></div></div>
     </div>`;
   }).join('');
 }
+// Work Items
+function addWorkItem(projId){
+  const title=prompt('Work item title (e.g. "Pull permits", "Schedule inspection"):');
+  if(!title||!title.trim())return;
+  const due=prompt('Due date? (YYYY-MM-DD, or leave blank):');
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p)return;
+  if(!p.workItems)p.workItems=[];
+  p.workItems.push({id:uid(),title:title.trim(),status:'todo',due:due&&due.trim()||''});
+  saveState();renderProjectsTab();toast('Work item added.');
+}
+function cycleWorkItemStatus(projId,idx){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p||!p.workItems[idx])return;
+  const cycle={todo:'inprogress',inprogress:'done',done:'todo'};
+  p.workItems[idx].status=cycle[p.workItems[idx].status]||'todo';
+  saveState();renderProjectsTab();renderProjects();
+}
+function deleteWorkItem(projId,idx){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p)return;
+  p.workItems.splice(idx,1);
+  saveState();renderProjectsTab();toast('Work item deleted.');
+}
+// Suite / Lease Tracker
+function addSuite(projId){
+  const name=prompt('Suite or building name (e.g. "Suite 101", "Building A"):');
+  if(!name||!name.trim())return;
+  const sfStr=prompt('Square footage (numbers only, or leave blank):');
+  const sf=parseInt(sfStr)||0;
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p)return;
+  if(!p.suites)p.suites=[];
+  p.suites.push({id:uid(),name:name.trim(),sf,status:'available'});
+  saveState();renderProjectsTab();toast('Suite added.');
+}
+function cycleSuiteStatus(projId,idx){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p||!p.suites[idx])return;
+  const cycle={available:'loi',loi:'leased',leased:'available'};
+  p.suites[idx].status=cycle[p.suites[idx].status]||'available';
+  saveState();renderProjectsTab();toast(`Status: ${p.suites[idx].status}`);
+}
+function deleteSuite(projId,idx){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p)return;
+  p.suites.splice(idx,1);
+  saveState();renderProjectsTab();toast('Suite deleted.');
+}
+
 function toggleProjFilter(type){if(type==='brok')STATE.projFilterBrok=!(STATE.projFilterBrok!==false);else STATE.projFilterDev=!(STATE.projFilterDev!==false);saveState();document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);renderProjectsTab();}
 function deleteProject(id){if(!confirm('Delete project? Linked deals will be unlinked.'))return;STATE.deals.forEach(d=>{if(d.projectId===id)delete d.projectId;});STATE.projects=STATE.projects.filter(x=>x.id!==id);saveState();renderProjects();renderDeals();toast('Project deleted.');}
 
@@ -927,8 +1060,16 @@ function saveTask(existingId){
   if(existingId){const t=STATE.tasks.find(x=>x.id===existingId);if(t)Object.assign(t,{title,type,day,time,projectId:projId,importance,contactId,followUpDate});}
   else STATE.tasks.push({id:uid(),title,type,day,time,projectId:projId,done:false,importance,contactId,followUpDate});
   const newCount=selectedTaskContacts.filter(c=>c.isNew).length;selectedTaskContacts=[];
+  // Auto-create a follow-up task on the follow-up date
+  if(followUpDate && !existingId){
+    const fuTaskTitle=`Follow up: ${title}`;
+    const alreadyExists=STATE.tasks.some(t=>t.title===fuTaskTitle&&t.day===followUpDate);
+    if(!alreadyExists){
+      STATE.tasks.push({id:uid(),title:fuTaskTitle,type,day:followUpDate,time:'',projectId:projId,done:false,importance:3,contactId,followUpDate:''});
+    }
+  }
   saveState();closeModal();renderWeek();renderKPIs();renderFollowups();renderContacts();
-  toast(existingId?'Task updated.':`Task added.${newCount?' '+newCount+' new contact.':''}${contactId&&followUpDate?' Follow-up scheduled.':''}`);
+  toast(existingId?'Task updated.':`Task added.${newCount?' '+newCount+' new contact.':''}${followUpDate?' Follow-up task created for '+fmtDisplay(followUpDate)+'.':''}`);
 }
 function deleteTaskById(id){if(!confirm('Delete task?'))return;STATE.tasks=STATE.tasks.filter(x=>x.id!==id);saveState();closeModal();renderWeek();renderKPIs();toast('Task deleted.');}
 
@@ -976,6 +1117,10 @@ function renderDealModal(box,data={}){
         </div>
       </div>
       <div class="form-row">
+        <label>Follow-up date <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">(auto-creates a task)</span></label>
+        <input id="f-deal-followup" type="date" value="${data.dealFollowUp||''}"/>
+      </div>
+      <div class="form-row">
         <label>Key dates</label>
         <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
           <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">First contact</label><input id="f-ddate-first" type="date" value="${data.dateFirstContact||''}"/></div>
@@ -1018,9 +1163,20 @@ function saveDeal(existingId){
   finalContactIds.forEach(cid=>{const c=STATE.contacts.find(x=>x.id===cid);if(c){if(!c.linkedDeals)c.linkedDeals=[];if(!c.linkedDeals.includes(dealId))c.linkedDeals.push(dealId);}});
   if(existingId){const d=STATE.deals.find(x=>x.id===existingId);if(d)Object.assign(d,{name,type,stage,location,size,level,fee,projectId,dateFirstContact,dateLoiSent,dateLeaseSent});}
   else STATE.deals.push({id:dealId,name,type,stage,location,size,level,fee,projectId,dateFirstContact,dateLoiSent,dateLeaseSent,value:0});
-  saveState();closeModal();renderDeals();renderKPIs();renderMap();renderContacts();renderContactDetail(STATE.selectedContact);renderProjectsTab();
+  // Auto-create follow-up task if follow-up date set on deal
+  const dealFuDate=document.getElementById('f-ddate-first')?.dataset?.fudate||'';
+  // Check for a dedicated follow-up date field on deal
+  const dealFollowUp=document.getElementById('f-deal-followup')?.value||'';
+  if(dealFollowUp){
+    const fuTitle=`Follow up: ${name}`;
+    const alreadyExists=STATE.tasks.some(t=>t.title===fuTitle&&t.day===dealFollowUp);
+    if(!alreadyExists){
+      STATE.tasks.push({id:uid(),title:fuTitle,type,day:dealFollowUp,time:'',projectId,done:false,importance:3,followUpDate:''});
+    }
+  }
+  saveState();closeModal();renderDeals();renderKPIs();renderMap();renderContacts();renderContactDetail(STATE.selectedContact);renderProjectsTab();renderWeek();
   const newCount=selectedDealContacts.filter(c=>c.isNew).length;
-  toast(existingId?`Deal updated \u00b7 ${finalContactIds.length} contact(s) linked`:`Deal added \u00b7 ${finalContactIds.length} contact(s) linked${newCount?` \u00b7 ${newCount} new contact(s) created`:''}`);
+  toast(existingId?`Deal updated \u00b7 ${finalContactIds.length} contact(s) linked`:`Deal added \u00b7 ${finalContactIds.length} contact(s) linked${newCount?` \u00b7 ${newCount} new contact(s) created`:''}${dealFollowUp?' \u00b7 Follow-up task created.':''}`);
   selectedDealContacts=[];
 }
 function deleteDeal(id){if(!confirm('Delete this deal?'))return;STATE.deals=STATE.deals.filter(x=>x.id!==id);saveState();closeModal();renderDeals();renderKPIs();renderMap();toast('Deal deleted.');}
@@ -1092,9 +1248,9 @@ function projectModalHTML(data={}){
 }
 function saveProject(existingId){
   const name=document.getElementById('f-pname').value.trim();if(!name){toast('Please enter a project name.');return;}
-  const type=document.getElementById('f-ptype').value,location=document.getElementById('f-ploc').value.trim(),phase=document.getElementById('f-pphase').value.trim(),nextMilestone=document.getElementById('f-pmilestone').value.trim(),progress=Math.min(100,Math.max(0,parseInt(document.getElementById('f-pprogress').value)||0)),budget=parseInt(document.getElementById('f-pbudget').value)||0,notes=document.getElementById('f-pnotes').value.trim();
-  if(existingId){const p=STATE.projects.find(x=>x.id===existingId);if(p)Object.assign(p,{name,type,location,phase,nextMilestone,progress,budget,notes});}
-  else STATE.projects.push({id:uid(),name,type,location,phase,nextMilestone,progress,budget,notes});
+  const type=document.getElementById('f-ptype').value,location=document.getElementById('f-ploc').value.trim(),phase=document.getElementById('f-pphase').value.trim(),budget=parseInt(document.getElementById('f-pbudget').value)||0,notes=document.getElementById('f-pnotes').value.trim();
+  if(existingId){const p=STATE.projects.find(x=>x.id===existingId);if(p)Object.assign(p,{name,type,location,phase,budget,notes});}
+  else STATE.projects.push({id:uid(),name,type,location,phase,budget,notes,workItems:[],suites:[]});
   saveState();closeModal();renderProjects();renderDeals();toast(existingId?'Project updated.':'Project added.');
 }
 
