@@ -712,6 +712,8 @@ async function pullFromSupabase(){
       if(!STATE.tenants||STATE.tenants.length===0){
         STATE.tenants = defaults.tenants;
       }
+      // Sync all tenant contacts to contacts page
+      syncAllTenantContacts();
       try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
       reRenderAll();
       toast('Data synced from cloud ☁️');
@@ -1865,6 +1867,39 @@ function tenantModalHTML(data={}){
     </div>`;
 }
 
+function syncTenantToContacts(tenantName, contactName, contactTitle, phone, email){
+  if(!contactName) return;
+  const ini=initials(contactName);
+  // Check if contact already exists by email or name+company
+  const existing=STATE.contacts.find(c=>
+    (email&&c.email===email)||(c.name===contactName&&c.company===tenantName)
+  );
+  if(existing){
+    // Update details if changed
+    if(phone&&!existing.phone) existing.phone=phone;
+    if(email&&!existing.email) existing.email=email;
+    if(contactTitle&&!existing.role) existing.role=contactTitle;
+    return;
+  }
+  // Create new contact
+  STATE.contacts.push({
+    id:uid(),name:contactName,ini,company:tenantName,
+    role:contactTitle||'Tenant RE Contact',type:'Tenant',
+    phone:phone||'',email:email||'',
+    lastContact:'',followUpDate:'',followUpNote:'',
+    linkedDeals:[],log:[]
+  });
+}
+
+function syncAllTenantContacts(){
+  if(!STATE.tenants) return;
+  STATE.tenants.forEach(t=>{
+    if(t.contact && t.contact !== 'Site Submission' && t.contact !== 'Confirm from flyer'){
+      syncTenantToContacts(t.name, t.contact, t.contactTitle, t.phone, t.email);
+    }
+  });
+}
+
 function saveTenant(existingId){
   const name=document.getElementById('f-tname').value.trim();
   if(!name){toast('Please enter a tenant name.');return;}
@@ -1888,7 +1923,12 @@ function saveTenant(existingId){
   } else {
     STATE.tenants.push({id:uid(),name,category,subcat:category,sfMin,sfMax,endCap,driveThru,requirements,contact,contactTitle,phone,email,status,parking,notes,outreachStage:'Not Started'});
   }
-  saveState();closeModal();renderTenants();toast(existingId?'Tenant updated.':'Tenant added.');
+  // Auto-sync contact to contacts page
+  if(contact && contact !== 'Site Submission'){
+    syncTenantToContacts(name, contact, contactTitle, phone, email);
+  }
+  saveState();closeModal();renderTenants();renderContacts();renderKPIs();
+  toast(existingId?'Tenant updated.':'Tenant added · Contact synced to Contacts page.');
 }
 
 // Init
@@ -1897,7 +1937,7 @@ function init(){
   fetchNews();renderWeek();renderKPIs();renderProjects();renderFollowups();
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
-  renderDeals();renderContacts();renderMap();renderTenants();fetchRates();initMsal();
+  renderDeals();renderContacts();renderMap();renderTenants();syncAllTenantContacts();fetchRates();initMsal();
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
   document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
   document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
