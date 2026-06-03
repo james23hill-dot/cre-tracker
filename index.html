@@ -8,6 +8,7 @@
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
 <script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
   --paper:#f4f3ef;--surface:#ffffff;--surface-2:#faf9f6;--surface-3:#f0eee8;
@@ -321,7 +322,7 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 
 <div id="appShell" style="display:none">
 <header class="appbar">
-  <div class="brand"><div class="mark">CH</div><div class="name">CRE&nbsp;HQ <span>&middot; Carolinas desk</span></div></div>
+  <div class="brand"><div class="mark">CH</div><div class="name">CRE&nbsp;HQ <span>&middot; Carolinas desk</span></div><span id="syncDot" style="width:7px;height:7px;border-radius:50%;background:var(--good);opacity:0;transition:opacity .3s;margin-left:2px;" title="Synced to cloud"></span></div>
   <div class="ticker">
     <div class="ti"><span class="k">SOFR</span><span class="v" id="t-sofr">4.31</span><span class="c down" id="t-sofr-chg">&#9660;0.02</span></div>
     <div class="ti"><span class="k">10Y UST</span><span class="v" id="t-10y">4.44</span><span class="c up" id="t-10y-chg">&#9650;0.03</span></div>
@@ -531,8 +532,85 @@ function defaultState(){
   };
 }
 
-function loadState(){try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}return defaultState();}
-function saveState(){try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}}
+// Supabase config
+const SUPA_URL = 'https://rohexbfobhsomlndedhp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaGV4YmZvYmhzb21sbmRlZGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NjkyNTIsImV4cCI6MjA5NjA0NTI1Mn0.9Ht21sl_xszVCEGhikvx-fIpmtUayr5b4jmH7Xqx5Zc';
+const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+let saveTimer = null;
+
+function loadState(){
+  // Load from localStorage first for instant startup
+  try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}
+  return defaultState();
+}
+
+function saveState(){
+  // Save to localStorage immediately for responsiveness
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
+  // Debounce Supabase save — write to cloud 1.5s after last change
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushToSupabase, 1500);
+}
+
+async function pushToSupabase(){
+  try{
+    STATE._savedAt = Date.now();
+    await supabase.from('cre_state').upsert({id:'main', data: STATE, updated_at: new Date().toISOString()});
+    // Flash sync dot
+    const dot = document.getElementById('syncDot');
+    if(dot){dot.style.opacity='1';setTimeout(()=>dot.style.opacity='0',1500);}
+  }catch(e){console.warn('Supabase save failed:',e);}
+}
+
+async function pullFromSupabase(){
+  try{
+    const {data, error} = await supabase.from('cre_state').select('data, updated_at').eq('id','main').single();
+    if(error||!data) return;
+    const remote = data.data;
+    if(!remote||!remote.tasks) return;
+    // Merge: use remote if it's newer than local
+    const localTs = STATE._savedAt || 0;
+    const remoteTs = new Date(data.updated_at).getTime();
+    if(remoteTs > localTs){
+      STATE = remote;
+      STATE._savedAt = remoteTs;
+      try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
+      // Re-render everything with fresh data
+      applyTheme();
+      showTab(STATE.activeTab||'home');
+      renderWeek();renderKPIs();renderProjects();renderFollowups();
+      renderDeals();renderContacts();renderMap();
+      document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
+      document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
+      document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
+      document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
+      document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
+      document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev!==false);
+      toast('Data synced from cloud ☁️');
+    }
+  }catch(e){console.warn('Supabase pull failed:',e);}
+}
+
+// Subscribe to real-time changes from other devices
+function subscribeToSupabase(){
+  supabase.channel('cre_state_changes')
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cre_state'},
+      payload=>{
+        const remote=payload.new?.data;
+        if(!remote||!remote.tasks) return;
+        const remoteTs=new Date(payload.new.updated_at).getTime();
+        const localTs=STATE._savedAt||0;
+        if(remoteTs>localTs+2000){ // 2s buffer to avoid echo
+          STATE=remote;
+          STATE._savedAt=remoteTs;
+          try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
+          renderWeek();renderKPIs();renderProjects();renderFollowups();
+          renderDeals();renderContacts();renderMap();
+          toast('Synced from another device ☁️');
+        }
+      })
+    .subscribe();
+}
 
 // Utilities
 function getWeekMonday(date){const d=new Date(date),day=d.getDay(),diff=day===0?-6:1-day;d.setDate(d.getDate()+diff);d.setHours(0,0,0,0);return d;}
@@ -1316,6 +1394,9 @@ function init(){
   document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
   document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
   document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev!==false);
+  // Pull latest from Supabase and subscribe to real-time updates
+  pullFromSupabase();
+  subscribeToSupabase();
 }
 if(checkAuth()){document.getElementById('loginScreen').style.display='none';document.getElementById('appShell').style.display='block';init();}
 else setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
