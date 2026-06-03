@@ -811,41 +811,7 @@ function saveNewContactsFromArr(arr,dealId){return arr.map(entry=>{if(!entry.isN
 // News
 const NEWS_API_KEY='260b9efbee434627bfbb5fa41dc1cf74';
 async function fetchNews(){
-  const panel=document.getElementById('newsPanel');
-  panel.innerHTML='<div style="padding:12px 0;color:var(--ink-3);font-size:13px;text-align:center;">Loading CRE news&hellip;</div>';
-  // Check cache - only refresh every 4 hours
-  const cacheKey='cre_news_cache';
-  const cacheTs='cre_news_ts';
-  const cached=localStorage.getItem(cacheKey);
-  const lastFetch=parseInt(localStorage.getItem(cacheTs)||'0');
-  const fourHours=4*60*60*1000;
-  if(cached&&Date.now()-lastFetch<fourHours){
-    panel.innerHTML=cached;
-    return;
-  }
-  try{
-    const res=await fetch('https://api.anthropic.com/v1/messages',{
-      method:'POST',
-      headers:{'Content-Type':'application/json'},
-      body:JSON.stringify({
-        model:'claude-sonnet-4-20250514',
-        max_tokens:1000,
-        messages:[{role:'user',content:`Generate 7 realistic, current-sounding commercial real estate news headlines for the Carolinas market (SC and NC). Focus on: industrial, office, retail, multifamily markets in Charlotte, Greenville, Charleston, Columbia, Raleigh, Spartanburg, Wilmington, and York County. Format as JSON array with fields: title, geo (city/region), outlet (realistic outlet name), url (use #). Return ONLY valid JSON array, no other text.`}]
-      })
-    });
-    const data=await res.json();
-    const text=data.content?.[0]?.text||'[]';
-    const clean=text.replace(/\`\`\`json|\`\`\`/g,'').trim();
-    const articles=JSON.parse(clean);
-    const newsHtml=articles.map(a=>`
-      <div class="item">
-        <div class="src"><span class="geo">${a.geo}</span> &middot; ${a.outlet}</div>
-        <div class="hl">${a.title}</div>
-      </div>`).join('');
-    localStorage.setItem(cacheKey,newsHtml);
-    localStorage.setItem(cacheTs,Date.now().toString());
-    panel.innerHTML=newsHtml;
-  }catch(e){renderNewsFallback();}
+  renderNewsFallback();
 }
 
 function renderNewsFallback(){document.getElementById('newsPanel').innerHTML=STATE.news.slice(0,6).map(n=>`<div class="item"><div class="src"><span class="geo">${n.geo}</span> &middot; ${n.outlet}</div><div class="hl">${n.hl}</div></div>`).join('');}
