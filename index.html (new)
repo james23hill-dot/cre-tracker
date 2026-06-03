@@ -1,0 +1,1406 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark" data-density="comfortable">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CRE HQ · Carolinas Desk</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+<style>
+:root {
+  --paper:#f4f3ef;--surface:#ffffff;--surface-2:#faf9f6;--surface-3:#f0eee8;
+  --ink:#1e1c19;--ink-2:#6b6760;--ink-3:#9c978d;--line:#e7e4dc;--line-2:#f0eee9;
+  --tint-bg:#ffffff;
+  --brok:#4f82c6;--brok-soft:color-mix(in oklab,var(--brok) 13%,var(--tint-bg));--brok-line:color-mix(in oklab,var(--brok) 38%,var(--tint-bg));
+  --dev:#c08b3e;--dev-soft:color-mix(in oklab,var(--dev) 15%,var(--tint-bg));--dev-line:color-mix(in oklab,var(--dev) 40%,var(--tint-bg));
+  --good:oklch(0.56 0.09 150);--good-soft:color-mix(in oklab,var(--good) 14%,var(--tint-bg));
+  --danger:oklch(0.55 0.15 28);--danger-soft:color-mix(in oklab,var(--danger) 14%,var(--tint-bg));
+  --warn:oklch(0.62 0.13 65);
+  --sans:"IBM Plex Sans",system-ui,sans-serif;--mono:"IBM Plex Mono",monospace;
+  --r:12px;--r-sm:8px;--r-xs:6px;
+  --sh:0 1px 2px rgba(31,28,25,.05),0 1px 1px rgba(31,28,25,.04);
+  --sh-2:0 4px 14px rgba(31,28,25,.08),0 1px 3px rgba(31,28,25,.05);
+  --gut:18px;
+}
+[data-density="compact"]{--gut:12px;}
+html[data-theme="dark"]{
+  --paper:#15130f;--surface:#1f1c16;--surface-2:#1a1712;--surface-3:#2c2820;
+  --ink:#efece3;--ink-2:#a7a299;--ink-3:#746e63;--line:#332e25;--line-2:#272219;--tint-bg:#1f1c16;
+  --good:oklch(0.74 0.10 150);--danger:oklch(0.72 0.14 28);--warn:oklch(0.82 0.11 70);
+  --sh:0 1px 2px rgba(0,0,0,.45);--sh-2:0 6px 18px rgba(0,0,0,.55);
+}
+*{box-sizing:border-box;}
+html,body{margin:0;background:var(--paper);color:var(--ink);font-family:var(--sans);font-size:14.5px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+h1,h2,h3,h4{margin:0;font-weight:600;letter-spacing:-0.01em;}p{margin:0;}
+button,input,select,textarea{font-family:inherit;}button{cursor:pointer;}
+input,select,textarea{background:var(--surface);color:var(--ink);border:1px solid var(--line);border-radius:var(--r-sm);padding:7px 10px;font-size:13.5px;outline:none;width:100%;}
+input:focus,select:focus,textarea:focus{border-color:var(--ink-3);}
+.mono{font-family:var(--mono);}.muted{color:var(--ink-2);}.faint{color:var(--ink-3);}.tiny{font-size:12px;}
+.up{color:var(--good);}.down{color:var(--danger);}a{color:var(--brok);text-decoration:none;}
+
+/* APP BAR */
+.appbar{position:sticky;top:0;z-index:40;display:flex;align-items:center;gap:22px;height:60px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line);}
+.brand{display:flex;align-items:center;gap:11px;flex-shrink:0;}
+.brand .mark{width:34px;height:34px;border-radius:9px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700;font-size:15px;letter-spacing:-0.03em;}
+.brand .name{font-weight:600;font-size:16px;letter-spacing:-0.02em;white-space:nowrap;}
+.brand .name span{color:var(--ink-3);font-weight:500;}
+.ticker{display:flex;gap:18px;align-items:center;padding:5px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:99px;flex-shrink:0;}
+.ticker .ti{display:flex;align-items:baseline;gap:6px;font-size:12.5px;}
+.ticker .ti .k{color:var(--ink-2);font-weight:500;}.ticker .ti .v{font-family:var(--mono);font-weight:600;font-size:13px;}.ticker .ti .c{font-family:var(--mono);font-size:11px;}
+.appbar .spacer{flex:1;}
+.search-box{display:flex;align-items:center;gap:8px;width:230px;padding:7px 12px;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;color:var(--ink-3);font-size:13.5px;cursor:text;}
+.btn{display:inline-flex;align-items:center;gap:7px;height:36px;padding:0 14px;border:1px solid var(--line);background:var(--surface);border-radius:9px;font-size:13.5px;font-weight:500;color:var(--ink);box-shadow:var(--sh);}
+.btn:hover{background:var(--surface-2);}.btn.primary{background:var(--ink);color:var(--paper);border-color:var(--ink);}.btn.primary:hover{opacity:.9;}
+.btn.danger{background:var(--danger-soft);color:var(--danger);border-color:transparent;}.btn .plus{font-size:17px;line-height:1;margin-top:-1px;}.btn.sm{height:30px;padding:0 10px;font-size:12.5px;}
+.avatar{width:34px;height:34px;border-radius:50%;background:var(--surface-3);border:1px solid var(--line);display:grid;place-items:center;font-size:13px;font-weight:600;color:var(--ink-2);flex-shrink:0;cursor:pointer;}
+
+/* TAB NAV */
+.tabnav{display:flex;gap:2px;align-items:stretch;height:46px;padding:0 22px;background:var(--surface);border-bottom:1px solid var(--line);position:sticky;top:60px;z-index:39;}
+.tabnav button{position:relative;border:none;background:none;padding:0 16px;font-size:14px;font-weight:500;color:var(--ink-2);display:inline-flex;align-items:center;gap:8px;}
+.tabnav button:hover{color:var(--ink);}.tabnav button[aria-selected="true"]{color:var(--ink);font-weight:600;}
+.tabnav button[aria-selected="true"]::after{content:"";position:absolute;left:12px;right:12px;bottom:-1px;height:2px;background:var(--ink);border-radius:2px;}
+.tabnav .count{font-family:var(--mono);font-size:11px;padding:1px 7px;border-radius:99px;background:var(--surface-3);color:var(--ink-2);}
+
+/* LAYOUT */
+.wrap{padding:20px 22px 60px;max-width:1640px;margin:0 auto;}.screen{display:none;}.screen.active{display:block;}
+
+/* TAGS / CHIPS / BADGES */
+.tag{display:inline-flex;align-items:center;gap:5px;font-size:11.5px;font-weight:600;padding:2px 9px;border-radius:99px;letter-spacing:.01em;}
+.tag::before{content:"";width:6px;height:6px;border-radius:50%;background:currentColor;}
+.tag.brok{color:var(--brok);background:var(--brok-soft);}.tag.dev{color:var(--dev);background:var(--dev-soft);}
+.chip{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;font-weight:500;padding:4px 11px;border:1px solid var(--line);border-radius:99px;background:var(--surface);color:var(--ink-2);cursor:pointer;white-space:nowrap;}
+.chip:hover{border-color:var(--ink-3);color:var(--ink);}.chip.on,.chip[data-on="true"]{color:var(--ink);border-color:var(--ink-3);background:var(--surface-2);}
+.chip.brok.on,.chip.brok[data-on="true"]{color:var(--brok);border-color:var(--brok-line);background:var(--brok-soft);}
+.chip.dev.on,.chip.dev[data-on="true"]{color:var(--dev);border-color:var(--dev-line);background:var(--dev-soft);}
+.chip::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor;opacity:.9;}.chip.nofill::before{display:none;}
+.badge{font-family:var(--mono);font-size:11px;font-weight:600;padding:2px 8px;border-radius:6px;white-space:nowrap;border:1px solid var(--line);}
+.badge.over{color:var(--danger);background:var(--danger-soft);border-color:transparent;}.badge.today{color:var(--warn);background:var(--dev-soft);border-color:transparent;}
+.badge.good{color:var(--good);background:var(--good-soft);border-color:transparent;}.badge.time{color:var(--ink-2);background:var(--surface-2);}
+
+/* PANELS */
+.panel{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh);}
+.panel-h{display:flex;align-items:center;justify-content:space-between;gap:10px;padding:13px 16px;border-bottom:1px solid var(--line-2);}
+.panel-h h3{font-size:14.5px;}.panel-h .sub{font-size:12px;color:var(--ink-3);}.panel-b{padding:14px 16px;}.panel-b.tight{padding:6px 16px;}
+
+/* KPI STRIP */
+.kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:var(--gut);margin-bottom:var(--gut);}
+.kpi{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);padding:14px 16px;box-shadow:var(--sh);}
+.kpi .k{font-size:12.5px;color:var(--ink-2);display:flex;align-items:center;gap:7px;}.kpi .v{font-family:var(--mono);font-size:27px;font-weight:600;letter-spacing:-0.02em;margin-top:4px;}.kpi .sub{font-size:12px;margin-top:3px;}
+.kpi.alert{border-color:var(--danger-soft);}.kpi.alert .v{color:var(--danger);}.kpi.ring-kpi{display:flex;align-items:center;gap:16px;}
+.dotk{width:8px;height:8px;border-radius:50%;}
+.ring{position:relative;width:74px;height:74px;flex:0 0 auto;}.ring svg{width:100%;height:100%;transform:rotate(-90deg);}
+.ring .track{fill:none;stroke:var(--surface-3);stroke-width:8;}.ring .prog{fill:none;stroke:var(--good);stroke-width:8;stroke-linecap:round;stroke-dasharray:213.6;stroke-dashoffset:213.6;transition:stroke-dashoffset .55s cubic-bezier(.22,1,.36,1);}
+.ring-pct{position:absolute;inset:0;display:grid;place-items:center;font-family:var(--mono);font-weight:600;font-size:17px;letter-spacing:-0.02em;}
+
+/* COMMAND CENTER */
+.cc{display:grid;grid-template-columns:290px 1fr 320px;gap:var(--gut);align-items:start;}.col{display:grid;gap:var(--gut);}
+
+/* NEWS */
+.news .item{padding:11px 0;border-bottom:1px solid var(--line-2);}.news .item:last-child{border-bottom:none;}
+.news .item .src{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);display:flex;gap:7px;align-items:center;margin-bottom:3px;}
+.news .item .src .geo{color:var(--brok);}.news .item .hl{font-size:13.5px;line-height:1.35;cursor:pointer;}.news .item:hover .hl{text-decoration:underline;}
+
+/* RATES */
+.rate{display:grid;grid-template-columns:1fr auto;align-items:center;gap:10px;padding:11px 0;border-bottom:1px solid var(--line-2);}.rate:last-child{border-bottom:none;}
+.rate .nm{font-size:12.5px;color:var(--ink-2);}.rate .big{font-family:var(--mono);font-size:22px;font-weight:600;letter-spacing:-0.02em;}
+.rate .spark{width:90px;height:30px;}.rate .spark path{fill:none;stroke:var(--ink-3);stroke-width:1.6;}.rate .chg{font-family:var(--mono);font-size:11.5px;text-align:right;margin-top:2px;}
+
+/* WEEK GRID */
+.weekhead{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:12px;flex-wrap:wrap;}
+.weekhead .nav{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;box-shadow:var(--sh);}
+.weekhead .nav button{border:none;background:var(--surface);padding:7px 11px;font-size:13px;border-right:1px solid var(--line);}
+.weekhead .nav button:last-child{border-right:none;}.weekhead .nav button:hover{background:var(--surface-2);}
+.weekgrid{display:grid;grid-template-columns:repeat(5,1fr);gap:10px;}
+.day{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);min-height:300px;box-shadow:var(--sh);display:flex;flex-direction:column;}
+.day.today{border-color:var(--ink-3);}
+.day .dh{display:flex;align-items:baseline;justify-content:space-between;padding:10px 11px;border-bottom:1px solid var(--line-2);flex-wrap:wrap;gap:4px;}
+.day.today .dh{background:var(--surface-2);}.day .dh .dow{font-size:13px;font-weight:600;}.day .dh .dn{font-family:var(--mono);font-size:11px;color:var(--ink-3);}
+.day.today .dh .dn{color:var(--warn);font-weight:600;}.day .dbody{padding:8px;display:flex;flex-direction:column;gap:7px;flex:1;}
+.task{border:1px solid var(--line);border-left:3px solid var(--ink-3);border-radius:var(--r-sm);padding:8px 9px;background:var(--surface);transition:box-shadow .12s;}
+.task:hover{box-shadow:var(--sh-2);}.task.brok{border-left-color:var(--brok);}.task.dev{border-left-color:var(--dev);}
+.task.is-over{background:var(--danger-soft);border-color:transparent;}
+.task .ttop{display:flex;gap:8px;align-items:flex-start;}.task .ttl{font-size:12.5px;line-height:1.3;flex:1;}
+.task.done .ttl{color:var(--ink-3);text-decoration:line-through;}
+.task .tmeta{display:flex;gap:6px;align-items:center;flex-wrap:wrap;margin-top:7px;margin-left:24px;}
+.task .tproj{font-size:11px;color:var(--ink-2);background:var(--surface-3);padding:1px 7px;border-radius:5px;}
+.cbx{width:16px;height:16px;border:1.6px solid var(--ink-3);border-radius:5px;flex:0 0 auto;margin-top:1px;display:grid;place-items:center;background:var(--surface);cursor:pointer;transition:background .1s,border-color .1s;}
+.cbx:hover{border-color:var(--ink);}.cbx.on{background:var(--ink);border-color:var(--ink);}
+.cbx.on::after{content:"✓";color:var(--paper);font-size:11px;line-height:1;}
+.task-actions{display:flex;gap:4px;margin-left:auto;}
+.task-actions button{background:none;border:none;color:var(--ink-3);font-size:11px;padding:2px 5px;border-radius:4px;height:auto;}
+.task-actions button:hover{color:var(--danger);background:var(--danger-soft);}
+.addt{border:1px dashed var(--line);color:var(--ink-3);border-radius:var(--r-sm);padding:6px;font-size:12px;text-align:center;background:var(--surface-2);cursor:pointer;}
+.addt:hover{color:var(--ink-2);border-color:var(--ink-3);}.task.hide{display:none;}
+
+/* RIGHT RAIL */
+.proj-item{padding:11px 0;border-bottom:1px solid var(--line-2);}.proj-item:last-child{border-bottom:none;}
+.proj-item .pt{display:flex;justify-content:space-between;align-items:center;gap:8px;}
+.proj-item .pn{font-size:13.5px;font-weight:500;flex:1;min-width:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.proj-item .pm{font-size:11.5px;color:var(--ink-2);margin:5px 0 7px;}
+.bar{height:6px;border-radius:99px;background:var(--surface-3);overflow:hidden;}.bar>span{display:block;height:100%;border-radius:99px;background:var(--dev);}.bar.brok>span{background:var(--brok);}
+.fu{display:grid;grid-template-columns:auto 1fr auto;gap:10px;align-items:center;padding:9px 0;border-bottom:1px solid var(--line-2);cursor:pointer;}.fu:last-child{border-bottom:none;}
+.fu .who{font-size:13px;font-weight:500;}.fu .why{font-size:11.5px;color:var(--ink-2);}
+.fu .av{width:30px;height:30px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--ink-2);}
+
+/* DEAL TRACKER */
+.toolbar{display:flex;gap:9px;align-items:center;flex-wrap:wrap;margin-bottom:14px;}
+.kan{display:grid;grid-template-columns:repeat(5,1fr);gap:var(--gut);align-items:start;}
+.kcol{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r);min-height:200px;}
+.kcol .kh{display:flex;align-items:center;justify-content:space-between;padding:11px 13px;border-bottom:1px solid var(--line);}
+.kcol .kh .kt{font-size:13px;font-weight:600;}.kcol .kh .ks{font-family:var(--mono);font-size:11px;color:var(--ink-2);}
+.kcol .ksum{font-family:var(--mono);font-size:11.5px;color:var(--ink-2);padding:7px 13px;border-bottom:1px solid var(--line-2);}
+.kcol .kb{padding:10px;display:flex;flex-direction:column;gap:10px;}
+.deal{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:var(--r-sm);padding:11px;box-shadow:var(--sh);cursor:pointer;transition:box-shadow .12s,transform .12s;}
+.deal:hover{box-shadow:var(--sh-2);transform:translateY(-1px);}.deal.brok{border-top-color:var(--brok);}.deal.dev{border-top-color:var(--dev);}
+.deal .dn{font-size:13.5px;font-weight:600;}.deal .ds{font-size:11.5px;color:var(--ink-2);margin:4px 0 9px;}
+.deal .df{display:flex;align-items:center;justify-content:space-between;margin-top:9px;}.deal.closed-deal{opacity:.65;}
+.level{display:inline-flex;gap:3px;align-items:center;}.level i{width:6px;height:14px;border-radius:2px;background:var(--surface-3);}
+.level i.on{background:var(--ink-3);}.level.hot i.on{background:var(--dev);}.level.max i.on{background:var(--good);}
+
+/* CONTACTS */
+.ct{display:grid;grid-template-columns:1fr 360px;gap:var(--gut);}.table-wrap{overflow:auto;}
+.table{width:100%;border-collapse:collapse;}
+.table th{text-align:left;font-size:11.5px;font-weight:600;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-3);padding:11px 14px;border-bottom:1px solid var(--line);}
+.table td{padding:12px 14px;border-bottom:1px solid var(--line-2);font-size:13.5px;}.table tr.clickable{cursor:pointer;}
+.table tbody tr.clickable:hover td{background:var(--surface-2);}.table tr.sel td{background:var(--brok-soft);}
+.ctname{display:flex;align-items:center;gap:10px;font-weight:500;}
+.av-sm{width:30px;height:30px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:11px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.detail{overflow:hidden;}.detail .dtop{display:flex;gap:13px;align-items:center;padding:16px;border-bottom:1px solid var(--line-2);}
+.detail .av-lg{width:54px;height:54px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:18px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.detail .nm{font-size:17px;font-weight:600;}.detail .co{font-size:12.5px;color:var(--ink-2);}
+.field{display:grid;grid-template-columns:92px 1fr;gap:10px;padding:9px 16px;font-size:13px;border-bottom:1px solid var(--line-2);}
+.field .fl{color:var(--ink-3);font-size:12px;padding-top:1px;}
+.subhead{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);padding:10px 16px 6px;}
+.link{display:flex;align-items:center;justify-content:space-between;padding:7px 16px;border-bottom:1px solid var(--line-2);}.link:last-child{border-bottom:none;}
+.logitem{padding:9px 16px;border-bottom:1px solid var(--line-2);}
+.logitem .when{font-family:var(--mono);font-size:10.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:3px;}.logitem:last-child{border-bottom:none;}
+
+/* MAP */
+.mapgrid{display:grid;grid-template-columns:1fr 340px;gap:var(--gut);}
+.mapcanvas{position:relative;min-height:550px;border-radius:var(--r);overflow:hidden;background:radial-gradient(120% 90% at 65% 30%,oklch(0.85 0.02 235) 0%,oklch(0.82 0.02 150) 58%,oklch(0.80 0.02 120) 100%);border:1px solid var(--line);}
+html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30%,oklch(0.27 0.02 235) 0%,oklch(0.24 0.02 150) 58%,oklch(0.22 0.02 120) 100%);}
+.map-nc-label,.map-sc-label{position:absolute;font-family:var(--mono);font-size:10px;font-weight:600;letter-spacing:.15em;text-transform:uppercase;color:var(--ink-3);pointer-events:none;}
+.map-nc-label{left:45%;top:15%;}.map-sc-label{left:20%;top:72%;}
+.maptools{position:absolute;top:14px;left:14px;display:flex;gap:6px;}
+.mapzoom{position:absolute;top:14px;right:14px;display:flex;flex-direction:column;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface);}
+.mapzoom button{border:none;background:none;width:32px;height:32px;font-size:16px;color:var(--ink-2);}
+.mapzoom button:hover{background:var(--surface-2);}.mapzoom button:first-child{border-bottom:1px solid var(--line);}
+.wm{position:absolute;bottom:10px;left:50%;transform:translateX(-50%);font-family:var(--mono);font-size:10px;color:var(--ink-3);white-space:nowrap;}
+.carolinas-svg{position:absolute;inset:0;width:100%;height:100%;}
+.pin{position:absolute;transform:translate(-50%,-100%);cursor:pointer;z-index:2;}
+.pin-head{width:26px;height:26px;border-radius:50% 50% 50% 0;transform:rotate(-45deg);display:grid;place-items:center;border:2px solid rgba(255,255,255,.25);}
+.pin-head span{transform:rotate(45deg);font-family:var(--mono);font-size:10px;font-weight:600;color:#fff;}
+.pin.brok .pin-head{background:var(--brok);}.pin.dev .pin-head{background:var(--dev);}.pin.active .pin-head{background:var(--ink);}
+.pin-lbl{font-family:var(--mono);font-size:9.5px;font-weight:600;text-align:center;color:var(--ink-2);margin-top:4px;white-space:nowrap;}
+.drow{display:grid;grid-template-columns:32px 1fr auto;gap:10px;align-items:center;padding:9px 16px;cursor:pointer;border-bottom:1px solid var(--line-2);}
+.drow:last-child{border-bottom:none;}.drow:hover{background:var(--surface-2);}.drow.sel{background:var(--brok-soft);}
+.drow .pn{width:26px;height:26px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-family:var(--mono);font-size:11px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.drow .dn{font-size:13px;font-weight:500;}.drow .dl{font-size:11.5px;color:var(--ink-2);}
+.legend{display:flex;gap:20px;align-items:center;margin-top:12px;font-size:12.5px;color:var(--ink-2);}
+.legend .li{display:flex;align-items:center;gap:7px;}.legend .sw{width:12px;height:12px;border-radius:50%;}
+
+/* MODAL */
+.modal-backdrop{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:100;display:flex;align-items:center;justify-content:center;padding:20px;}
+.modal{background:var(--surface);border:1px solid var(--line);border-radius:var(--r);box-shadow:var(--sh-2);width:100%;max-width:520px;max-height:90vh;overflow-y:auto;}
+.modal-h{display:flex;align-items:center;justify-content:space-between;padding:16px 20px;border-bottom:1px solid var(--line);}
+.modal-h h3{font-size:16px;}.modal-close{background:none;border:none;font-size:20px;color:var(--ink-3);line-height:1;padding:0;width:28px;height:28px;border-radius:6px;}
+.modal-close:hover{background:var(--surface-2);color:var(--ink);}.modal-b{padding:20px;}
+.form-row{margin-bottom:14px;}
+.form-row label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:5px;}
+.form-row-2{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-bottom:14px;}
+.modal-footer{display:flex;gap:9px;justify-content:flex-end;padding:14px 20px;border-top:1px solid var(--line);}
+
+/* FOLLOW-UP SIDE-BY-SIDE */
+.fu-row{display:grid;grid-template-columns:1fr auto 1fr;gap:8px;align-items:center;}
+.fu-or{font-size:11px;font-weight:600;color:var(--ink-3);text-align:center;padding:0 2px;}
+
+/* QUICK CONTACT ENTRY */
+.qc-box{background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;margin-top:4px;}
+.qc-box-title{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:10px;}
+
+/* TOAST */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(10px);background:var(--ink);color:var(--paper);padding:10px 20px;border-radius:10px;font-size:13.5px;z-index:200;opacity:0;transition:opacity .2s,transform .2s;pointer-events:none;white-space:nowrap;}
+.toast.show{opacity:1;transform:translateX(-50%) translateY(0);}
+
+/* SETTINGS */
+.settings-panel{position:fixed;top:60px;right:0;width:280px;height:calc(100vh - 60px);background:var(--surface);border-left:1px solid var(--line);z-index:50;padding:20px;overflow-y:auto;transform:translateX(100%);transition:transform .2s;}
+.settings-panel.open{transform:translateX(0);}.settings-panel h3{font-size:14px;margin-bottom:16px;}
+.settings-section{margin-bottom:20px;}
+.settings-section label{display:block;font-size:12px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.05em;margin-bottom:8px;}
+.toggle-row{display:flex;align-items:center;justify-content:space-between;font-size:13.5px;margin-bottom:10px;}
+.toggle{position:relative;width:38px;height:22px;cursor:pointer;}.toggle input{opacity:0;width:0;height:0;}
+.toggle-slider{position:absolute;inset:0;background:var(--surface-3);border-radius:99px;transition:background .2s;}
+.toggle-slider::after{content:"";position:absolute;width:16px;height:16px;left:3px;top:3px;border-radius:50%;background:var(--ink-3);transition:transform .2s,background .2s;}
+.toggle input:checked+.toggle-slider{background:var(--ink);}.toggle input:checked+.toggle-slider::after{transform:translateX(16px);background:var(--paper);}
+
+/* PROJECTS TAB */
+.proj-card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
+.proj-card.dev{border-top-color:var(--dev);}.proj-card.brok{border-top-color:var(--brok);}
+.proj-card-h{display:flex;align-items:flex-start;justify-content:space-between;gap:10px;padding:14px 16px 10px;}
+.proj-card-h .pname{font-size:15px;font-weight:600;flex:1;}.proj-card-h .pactions{display:flex;gap:6px;flex-shrink:0;}
+.proj-meta{padding:0 16px 10px;font-size:12.5px;color:var(--ink-2);}
+.proj-progress{padding:0 16px 12px;}
+.proj-progress .bar-label{display:flex;justify-content:space-between;font-size:11.5px;color:var(--ink-3);margin-bottom:5px;}.proj-progress .bar{height:8px;}
+.proj-deals-section{border-top:1px solid var(--line-2);padding:12px 16px;}
+.proj-deals-section .pdeal-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:8px;}
+.proj-deal-row{display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--line-2);font-size:13px;}.proj-deal-row:last-child{border-bottom:none;}
+.proj-deal-row .dname{flex:1;font-weight:500;}.proj-deal-row .dstage{font-size:11.5px;color:var(--ink-2);}.proj-deal-row .dval{font-family:var(--mono);font-size:12px;font-weight:600;color:var(--ink-2);}
+.proj-tasks-section{border-top:1px solid var(--line-2);padding:10px 16px;}
+.proj-tasks-section .ptask-h{font-size:11px;font-weight:600;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-3);margin-bottom:6px;}
+.proj-task-row{display:flex;align-items:center;gap:8px;padding:4px 0;font-size:12.5px;}
+.proj-task-row .cbx-sm{width:13px;height:13px;border:1.5px solid var(--ink-3);border-radius:3px;flex-shrink:0;}
+.proj-empty{padding:20px;text-align:center;color:var(--ink-3);font-size:13px;}
+
+/* IMPORTANCE */
+.imp{display:inline-flex;gap:3px;align-items:center;flex-shrink:0;}.imp span{width:7px;height:7px;border-radius:50%;background:var(--surface-3);}.imp span.on{background:var(--ink-3);}
+.imp.i1 span.on,.imp.i2 span.on{background:var(--good);}.imp.i3 span.on{background:var(--warn);}.imp.i4 span.on,.imp.i5 span.on{background:var(--danger);}
+.task .contact-link{font-size:11px;color:var(--brok);background:var(--brok-soft);padding:1px 7px;border-radius:5px;cursor:pointer;}
+.task .contact-link:hover{text-decoration:underline;}
+.imp-picker{display:flex;gap:6px;align-items:center;}
+.imp-picker button{width:32px;height:32px;border:1.5px solid var(--line);border-radius:8px;background:var(--surface);font-size:13px;font-weight:600;color:var(--ink-2);transition:all .1s;}
+.imp-picker button:hover{border-color:var(--ink-3);color:var(--ink);}.imp-picker button.sel{background:var(--ink);color:var(--paper);border-color:var(--ink);}
+.imp-picker button[data-v="4"].sel,.imp-picker button[data-v="5"].sel{background:var(--danger);border-color:var(--danger);}
+.imp-picker button[data-v="3"].sel{background:var(--warn);border-color:var(--warn);}
+.imp-picker button[data-v="1"].sel,.imp-picker button[data-v="2"].sel{background:var(--good);border-color:var(--good);}
+
+/* CONTACT AUTOCOMPLETE */
+.contact-input-wrap{position:relative;}.contact-input-wrap input{width:100%;}
+.contact-suggestions{position:absolute;top:100%;left:0;right:0;background:var(--surface);border:1px solid var(--line);border-top:none;border-radius:0 0 var(--r-sm) var(--r-sm);box-shadow:var(--sh-2);z-index:200;max-height:180px;overflow-y:auto;}
+.contact-suggestions .sug-item{padding:9px 12px;cursor:pointer;font-size:13.5px;border-bottom:1px solid var(--line-2);display:flex;align-items:center;gap:8px;}
+.contact-suggestions .sug-item:last-child{border-bottom:none;}.contact-suggestions .sug-item:hover{background:var(--surface-2);}
+.contact-suggestions .sug-new{color:var(--brok);font-style:italic;}
+.contact-suggestions .sug-av{width:24px;height:24px;border-radius:50%;background:var(--surface-3);display:grid;place-items:center;font-size:10px;font-weight:600;color:var(--ink-2);flex-shrink:0;}
+.contact-tags{display:flex;flex-wrap:wrap;gap:6px;margin-top:8px;}
+.contact-tag{display:inline-flex;align-items:center;gap:5px;background:var(--brok-soft);color:var(--brok);border:1px solid var(--brok-line);border-radius:99px;padding:3px 10px 3px 8px;font-size:12.5px;font-weight:500;}
+.contact-tag button{background:none;border:none;color:var(--brok);font-size:14px;line-height:1;padding:0;cursor:pointer;opacity:.7;}.contact-tag button:hover{opacity:1;}
+
+/* LOGIN */
+.login-screen{position:fixed;inset:0;background:var(--paper);z-index:999;display:flex;align-items:center;justify-content:center;padding:20px;}
+.login-box{background:var(--surface);border:1px solid var(--line);border-radius:16px;box-shadow:var(--sh-2);width:100%;max-width:400px;padding:40px;}
+.login-logo{display:flex;align-items:center;gap:12px;margin-bottom:32px;}
+.login-mark{width:44px;height:44px;border-radius:12px;background:var(--ink);color:var(--paper);display:grid;place-items:center;font-weight:700;font-size:19px;letter-spacing:-0.03em;flex-shrink:0;}
+.login-title{font-size:20px;font-weight:700;letter-spacing:-0.02em;}.login-sub{font-size:13px;color:var(--ink-3);margin-top:2px;}
+.login-label{display:block;font-size:11.5px;font-weight:600;color:var(--ink-2);text-transform:uppercase;letter-spacing:.06em;margin-bottom:6px;}
+.login-input{width:100%;background:var(--surface-2);border:1px solid var(--line);border-radius:9px;padding:11px 14px;font-size:14.5px;color:var(--ink);outline:none;font-family:var(--sans);}
+.login-input:focus{border-color:var(--ink-3);}.login-field{margin-bottom:18px;}
+.login-btn{width:100%;height:44px;background:var(--ink);color:var(--paper);border:none;border-radius:9px;font-size:14.5px;font-weight:600;cursor:pointer;margin-top:8px;font-family:var(--sans);letter-spacing:-0.01em;}
+.login-btn:hover{opacity:.88;}.login-error{background:var(--danger-soft);color:var(--danger);border-radius:8px;padding:10px 14px;font-size:13px;margin-bottom:16px;display:none;}
+.login-error.show{display:block;}.login-footer{text-align:center;margin-top:20px;font-size:12px;color:var(--ink-3);}
+
+::-webkit-scrollbar{width:6px;height:6px;}::-webkit-scrollbar-track{background:transparent;}::-webkit-scrollbar-thumb{background:var(--line);border-radius:3px;}::-webkit-scrollbar-thumb:hover{background:var(--ink-3);}
+@media(max-width:1100px){.cc{grid-template-columns:260px 1fr;}.cc .col:last-child{display:none;}}
+@media(max-width:860px){.cc{grid-template-columns:1fr;}.weekgrid{grid-template-columns:repeat(3,1fr);}.kan{grid-template-columns:repeat(3,1fr);}.ct{grid-template-columns:1fr;}.kpis{grid-template-columns:repeat(2,1fr);}.mapgrid{grid-template-columns:1fr;}}
+
+/* CALENDAR EVENTS */
+.cal-event{border:1px solid var(--line);border-left:3px solid #7c5cbf;border-radius:var(--r-sm);padding:7px 9px;background:var(--surface);font-size:12px;}
+.cal-event .ce-time{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);margin-bottom:2px;}
+.cal-event .ce-title{font-size:12px;line-height:1.3;color:var(--ink);}
+.cal-event.all-day{border-left-color:#5b8a5e;}
+.cal-divider{font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.07em;color:var(--ink-3);padding:6px 2px 3px;display:flex;align-items:center;gap:6px;}
+.cal-divider::after{content:"";flex:1;height:1px;background:var(--line-2);}
+</style>
+</head>
+<body>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen">
+  <div class="login-box">
+    <div class="login-logo">
+      <div class="login-mark">CH</div>
+      <div><div class="login-title">CRE HQ</div><div class="login-sub">Carolinas Desk &middot; Private Access</div></div>
+    </div>
+    <div class="login-error" id="loginError">Incorrect password. Please try again.</div>
+    <div class="login-field"><label class="login-label">Username</label><input class="login-input" id="loginUser" type="text" placeholder="your username" autocomplete="username"/></div>
+    <div class="login-field"><label class="login-label">Password</label><input class="login-input" id="loginPass" type="password" placeholder="••••••••" autocomplete="current-password" onkeydown="if(event.key==='Enter')doLogin();"/></div>
+    <button class="login-btn" onclick="doLogin()">Sign in &rarr;</button>
+    <div class="login-footer">CRE HQ &middot; Carolinas Desk &middot; Private</div>
+  </div>
+</div>
+
+<div id="appShell" style="display:none">
+<header class="appbar">
+  <div class="brand"><div class="mark">CH</div><div class="name">CRE&nbsp;HQ <span>&middot; Carolinas desk</span></div><span id="syncDot" style="width:7px;height:7px;border-radius:50%;background:var(--good);opacity:0;transition:opacity .3s;margin-left:2px;" title="Synced to cloud"></span></div>
+  <div class="ticker">
+    <div class="ti"><span class="k">SOFR</span><span class="v" id="t-sofr">4.31</span><span class="c down" id="t-sofr-chg">&#9660;0.02</span></div>
+    <div class="ti"><span class="k">10Y UST</span><span class="v" id="t-10y">4.44</span><span class="c up" id="t-10y-chg">&#9650;0.03</span></div>
+    <div class="ti"><span class="k">2Y UST</span><span class="v">4.07</span><span class="c up">&#9650;0.01</span></div>
+    <div class="ti"><span class="k">Prime</span><span class="v">7.50</span><span class="c">&mdash;</span></div>
+  </div>
+  <div class="spacer"></div>
+  <div class="search-box" onclick="openSearch()">&#128269; Search deals, contacts&hellip;</div>
+  <button class="btn primary" onclick="openQuickAdd()"><span class="plus">+</span> Quick add</button>
+  <button class="btn sm" id="calBtn" onclick="toggleOutlookAuth()" style="gap:6px;white-space:nowrap;">
+    <span id="calBtnIcon">&#128197;</span><span id="calBtnLabel">Connect Outlook</span>
+  </button>
+  <div class="avatar" id="userAvatar" onclick="toggleSettings()">WN</div>
+</header>
+
+<nav class="tabnav" role="tablist">
+  <button role="tab" data-tab="home" aria-selected="true">This Week</button>
+  <button role="tab" data-tab="deals" aria-selected="false">Deal Tracker <span class="count" id="tab-deals-count">0</span></button>
+  <button role="tab" data-tab="contacts" aria-selected="false">Contacts <span class="count" id="tab-contacts-count">0</span></button>
+  <button role="tab" data-tab="projects" aria-selected="false">Projects <span class="count" id="tab-projects-count">0</span></button>
+  <button role="tab" data-tab="map" aria-selected="false">Deals Map <span class="count" id="tab-map-count">0</span></button>
+</nav>
+
+<div class="wrap">
+
+<!-- THIS WEEK -->
+<section class="screen active" id="tab-home">
+  <div class="kpis">
+    <div class="kpi"><div class="k"><span class="dotk" style="background:var(--ink-3)"></span>Tasks this week</div><div class="v" id="kpi-tasks">0</div><div class="sub muted" id="kpi-tasks-sub">0 today</div></div>
+    <div class="kpi" id="kpi-overdue-card"><div class="k"><span class="dotk" style="background:var(--danger)"></span>Overdue follow-ups</div><div class="v" id="kpi-overdue">0</div><div class="sub down" id="kpi-overdue-names">None</div></div>
+    <div class="kpi"><div class="k"><span class="dotk" style="background:var(--dev)"></span>Active deals</div><div class="v" id="kpi-deals">0</div><div class="sub muted" id="kpi-deals-sub">0 brok &middot; 0 dev</div></div>
+    <div class="kpi ring-kpi">
+      <div class="ring"><svg viewBox="0 0 80 80"><circle class="track" cx="40" cy="40" r="34"></circle><circle class="prog" id="weekProg" cx="40" cy="40" r="34"></circle></svg><div class="ring-pct" id="weekPct">0%</div></div>
+      <div><div class="k">Week complete</div><div class="v" style="font-size:18px;margin-top:2px" id="weekCount">0 of 0</div><div class="sub muted">tasks done</div></div>
+    </div>
+  </div>
+  <div class="cc">
+    <div class="col">
+      <div class="panel news"><div class="panel-h"><h3>CRE News</h3><span class="sub">SE &middot; SC &middot; NC</span></div><div class="panel-b tight" id="newsPanel"></div></div>
+      <div class="panel"><div class="panel-h"><h3>Rates</h3><span class="sub muted" id="ratesDate">live</span></div><div class="panel-b tight">
+        <div class="rate"><div><div class="nm">SOFR</div><div class="big mono" id="rate-sofr">4.31<span style="font-size:13px">%</span></div></div><div><svg class="spark" viewBox="0 0 90 30" preserveAspectRatio="none"><path d="M0,20 L15,18 L30,21 L45,13 L60,15 L75,10 L90,12"/></svg><div class="chg down" id="rate-sofr-chg">&#9660; 0.02</div></div></div>
+        <div class="rate"><div><div class="nm">10-Year Treasury</div><div class="big mono" id="rate-10y">4.44<span style="font-size:13px">%</span></div></div><div><svg class="spark" viewBox="0 0 90 30" preserveAspectRatio="none"><path d="M0,11 L15,14 L30,12 L45,17 L60,15 L75,20 L90,18"/></svg><div class="chg up" id="rate-10y-chg">&#9650; 0.03</div></div></div>
+      </div></div>
+    </div>
+    <div>
+      <div class="weekhead">
+        <div style="display:flex;gap:10px;align-items:center;"><h3 style="font-size:16px">This Week</h3><span class="mono muted tiny" id="weekDateRange"></span></div>
+        <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap;">
+          <span class="tiny faint">Filter:</span>
+          <button class="chip brok on" id="filter-brok" onclick="toggleFilter('brok')">Brokerage</button>
+          <button class="chip dev on" id="filter-dev" onclick="toggleFilter('dev')">Development</button>
+          <div class="nav"><button onclick="navWeek(-1)">&#8249;</button><button onclick="navWeek(0)">Today</button><button onclick="navWeek(1)">&#8250;</button></div>
+        </div>
+      </div>
+      <div class="weekgrid" id="weekGrid"></div>
+    </div>
+    <div class="col">
+      <div class="panel"><div class="panel-h"><h3>Long-term Projects</h3><span class="sub">development</span></div><div class="panel-b tight" id="projectsPanel"></div></div>
+      <div class="panel"><div class="panel-h"><h3>Follow-ups due</h3><span class="badge over" id="followupBadge">0 overdue</span></div><div class="panel-b tight" id="followupsPanel"></div></div>
+    </div>
+  </div>
+</section>
+
+<!-- DEALS -->
+<section class="screen" id="tab-deals">
+  <div class="toolbar">
+    <h3 style="font-size:16px;margin-right:6px">Pipeline</h3>
+    <button class="chip brok on" id="deal-filter-brok" onclick="toggleDealFilter('brok')">Brokerage</button>
+    <button class="chip dev on" id="deal-filter-dev" onclick="toggleDealFilter('dev')">Development</button>
+    <div class="spacer" style="flex:1"></div>
+    <span class="mono tiny muted" id="deal-summary"></span>
+    <button class="btn sm primary" onclick="openModal('deal')">+ New deal</button>
+  </div>
+  <div class="kan" id="kanban"></div>
+</section>
+
+<!-- CONTACTS -->
+<section class="screen" id="tab-contacts">
+  <div class="toolbar">
+    <input type="text" id="contactSearch" placeholder="Search name or company&hellip;" style="width:260px;" oninput="filterContacts()"/>
+    <button class="chip nofill on" data-ctype="all" onclick="setContactType('all')">All</button>
+    <button class="chip brok" data-ctype="Broker" onclick="setContactType('Broker')">Broker</button>
+    <button class="chip dev" data-ctype="Developer" onclick="setContactType('Developer')">Developer</button>
+    <button class="chip nofill" data-ctype="Tenant" onclick="setContactType('Tenant')">Tenant</button>
+    <button class="chip nofill" data-ctype="Investor" onclick="setContactType('Investor')">Investor</button>
+    <button class="chip nofill" data-ctype="Lender" onclick="setContactType('Lender')">Lender</button>
+    <div class="spacer" style="flex:1"></div>
+    <button class="btn sm primary" onclick="openModal('contact')">+ New contact</button>
+  </div>
+  <div class="ct">
+    <div class="panel" style="overflow:hidden"><div class="table-wrap"><table class="table"><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Last contact</th><th>Follow-up</th></tr></thead><tbody id="contactRows"></tbody></table></div></div>
+    <div class="panel detail" id="contactDetail"><div style="padding:40px;text-align:center;color:var(--ink-3);font-size:13px;">Select a contact to view details</div></div>
+  </div>
+</section>
+
+<!-- PROJECTS -->
+<section class="screen" id="tab-projects">
+  <div class="toolbar">
+    <h3 style="font-size:16px;margin-right:6px">Long-term Projects</h3>
+    <button class="chip brok on" id="proj-filter-brok" onclick="toggleProjFilter('brok')">Brokerage</button>
+    <button class="chip dev on" id="proj-filter-dev" onclick="toggleProjFilter('dev')">Development</button>
+    <div class="spacer" style="flex:1"></div>
+    <span class="mono tiny muted" id="proj-summary"></span>
+    <button class="btn sm primary" onclick="openModal('project',{})">+ New project</button>
+  </div>
+  <div id="projectsGrid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(380px,1fr));gap:var(--gut);align-items:start;"></div>
+</section>
+
+<!-- MAP -->
+<section class="screen" id="tab-map">
+  <div class="mapgrid">
+    <div class="mapcanvas" id="mapCanvas">
+      <svg class="carolinas-svg" viewBox="0 0 600 500" xmlns="http://www.w3.org/2000/svg" style="opacity:.15;pointer-events:none;">
+        <path d="M80,140 L120,120 L160,115 L200,110 L250,108 L300,110 L360,108 L420,112 L480,118 L520,125 L540,135 L535,155 L510,165 L470,170 L430,175 L390,180 L350,185 L310,190 L270,195 L230,200 L190,198 L155,195 L130,200 L110,210 L95,205 L85,190 Z" fill="var(--ink)" stroke="var(--line)" stroke-width="1"/>
+        <path d="M110,210 L130,200 L155,195 L190,198 L230,200 L270,195 L310,190 L310,215 L305,240 L295,265 L280,285 L260,305 L240,320 L215,330 L190,335 L170,325 L150,310 L130,295 L115,275 L108,255 L105,235 Z" fill="var(--ink)" stroke="var(--line)" stroke-width="1"/>
+      </svg>
+      <div class="map-nc-label">NORTH CAROLINA</div><div class="map-sc-label">SOUTH CAROLINA</div>
+      <div class="maptools"><button class="chip brok on" data-on="true" onclick="toggleMapFilter(this,'brok')">Brok</button><button class="chip dev on" data-on="true" onclick="toggleMapFilter(this,'dev')">Dev</button></div>
+      <div class="mapzoom"><button onclick="toast('Wire to Mapbox for geo')">+</button><button onclick="toast('Wire to Mapbox for geo')">&minus;</button></div>
+      <div id="mapPins"></div>
+      <div class="wm">NC + SC &middot; wire to Mapbox / MapLibre for production tiles</div>
+    </div>
+    <div class="panel maplist"><div class="panel-h"><h3>Deals on map</h3><span class="sub" id="mapCount">0</span></div><div id="mapRows"></div></div>
+  </div>
+  <div class="legend"><span class="li"><span class="sw" style="background:var(--brok)"></span> Brokerage</span><span class="li"><span class="sw" style="background:var(--dev)"></span> Development</span><span class="li faint" style="font-size:12px;">Click a pin or row to sync.</span></div>
+</section>
+
+</div><!-- /wrap -->
+<div class="toast" id="toast"></div>
+
+<div class="settings-panel" id="settingsPanel">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;"><h3>Settings</h3><button class="modal-close" onclick="toggleSettings()">&times;</button></div>
+  <div class="settings-section"><label>Appearance</label>
+    <div class="toggle-row"><span>Dark mode</span><label class="toggle"><input type="checkbox" id="toggleDark" onchange="setTheme(this.checked)"/><span class="toggle-slider"></span></label></div>
+    <div class="toggle-row"><span>Compact density</span><label class="toggle"><input type="checkbox" id="toggleCompact" onchange="setDensity(this.checked)"/><span class="toggle-slider"></span></label></div>
+  </div>
+  <div class="settings-section"><label>Your initials</label><input type="text" id="initialsInput" maxlength="2" style="text-transform:uppercase;" oninput="setInitials(this.value)"/></div>
+  <div class="settings-section" style="margin-top:30px;border-top:1px solid var(--line);padding-top:16px;"><label>Data</label>
+    <button class="btn sm" onclick="exportData()" style="width:100%;justify-content:center;margin-bottom:8px;">Export JSON backup</button>
+    <button class="btn sm danger" onclick="resetData()" style="width:100%;justify-content:center;margin-bottom:8px;">Reset to sample data</button>
+    <button class="btn sm danger" onclick="doLogout()" style="width:100%;justify-content:center;">Sign out</button>
+  </div>
+</div>
+
+<div class="modal-backdrop" id="modalBackdrop" style="display:none;" onclick="if(event.target===this)closeModal()"><div class="modal" id="modalBox"></div></div>
+</div><!-- /appShell -->
+
+<script>
+'use strict';
+const STORE_KEY='cre_hq_v2';
+let STATE=loadState();
+
+function defaultState(){
+  const today=new Date(),mon=getWeekMonday(today);
+  const fd=d=>`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+  const d=off=>{const x=new Date(mon);x.setDate(x.getDate()+off);return fd(x);};
+  return{
+    theme:'dark',density:'comfortable',initials:'WN',activeTab:'home',weekOffset:0,
+    tasks:[
+      {id:'t1',title:'Call back J. Mercer — Uptown sublease terms',type:'brok',projectId:'p1',day:d(0),time:'',done:false,importance:4},
+      {id:'t2',title:'Submit site-plan revisions',type:'dev',projectId:'p2',day:d(0),time:'5:00p',done:false,importance:5},
+      {id:'t3',title:'Tour flex space w/ tenant rep',type:'brok',projectId:'',day:d(1),time:'10:30a',done:false,importance:3},
+      {id:'t4',title:'Lender call — construction draw #3',type:'dev',projectId:'p1',day:d(1),time:'1:00p',done:false,importance:4},
+      {id:'t5',title:'Send LOI draft',type:'brok',projectId:'',day:d(2),time:'',done:true,importance:3},
+      {id:'t6',title:'Zoning hearing prep',type:'dev',projectId:'p3',day:d(2),time:'2:00p',done:false,importance:4},
+      {id:'t7',title:'Follow up: warehouse lease redline',type:'brok',projectId:'',day:d(3),time:'',done:false,importance:3},
+      {id:'t8',title:'Weekly dev pipeline review',type:'dev',projectId:'',day:d(4),time:'9:00a',done:false,importance:2},
+      {id:'t9',title:'Update commission forecast',type:'brok',projectId:'',day:d(4),time:'',done:false,importance:2},
+    ],
+    deals:[
+      {id:'d1',name:'Greenville Ind. Park Ph 1',location:'Greenville, SC',size:'±85 ac',type:'dev',stage:'under-contract',value:2200000,level:4,projectId:'p2'},
+      {id:'d2',name:'Columbia Mixed-Use',location:'Columbia, SC',size:'infill block',type:'dev',stage:'under-contract',value:3500000,level:4,projectId:'p1'},
+      {id:'d3',name:'Charleston warehouse',location:'Charleston, SC',size:'85k sf · lease',type:'brok',stage:'lease-sale',value:850000,level:3},
+      {id:'d4',name:'Charlotte Uptown sublease',location:'Charlotte, NC',size:'9k sf',type:'brok',stage:'lease-sale',value:300000,level:3},
+      {id:'d5',name:'Raleigh retail pad',location:'Raleigh, NC',size:'sale',type:'brok',stage:'lease-sale',value:1600000,level:3},
+      {id:'d6',name:'Wilmington land assemblage',location:'Wilmington, NC',size:'±18 ac',type:'dev',stage:'prelim',value:2400000,level:1,projectId:'p3'},
+      {id:'d7',name:'Spartanburg flex lease',location:'Spartanburg, SC',size:'22k sf',type:'brok',stage:'loi',value:600000,level:2},
+      {id:'d8',name:'N. Charleston bulk WH',location:'Charleston, SC',size:'120k sf',type:'brok',stage:'prelim',value:1100000,level:1},
+      {id:'d9',name:'Columbia parcel B',location:'Columbia, SC',size:'infill',type:'dev',stage:'prelim',value:900000,level:1},
+      {id:'d10',name:'Greenville outparcel QSR',location:'Greenville, SC',size:'pad',type:'dev',stage:'loi',value:400000,level:2},
+      {id:'d11',name:'Mauldin retail lease',location:'Mauldin, SC',size:'closed May',type:'brok',stage:'closed',value:0,fee:42000,level:4},
+    ],
+    contacts:[
+      {id:'c1',ini:'JM',name:'J. Mercer',company:'Mercer Group',role:'Tenant rep',type:'Broker',phone:'(864) 555-0142',email:'jmercer@mercergrp.com',lastContact:'2026-05-28',followUpDate:'2026-05-28',followUpNote:'Call re: Uptown sublease',linkedDeals:['d4','d7'],log:[{date:'2026-05-28',type:'call',note:'Walked sublease terms.'},{date:'2026-05-14',type:'email',note:'Sent Uptown availability + comps.'}]},
+      {id:'c2',ini:'DR',name:'D. Rouse',company:'Lowcountry Logistics',role:'Tenant',type:'Tenant',phone:'(843) 555-0190',email:'drouse@lowcolog.com',lastContact:'2026-05-29',followUpDate:'2026-05-29',followUpNote:'Lease redline',linkedDeals:['d3'],log:[{date:'2026-05-29',type:'email',note:'Returned lease redline.'}]},
+      {id:'c3',ini:'KP',name:'K. Patel',company:'Palmetto Capital',role:'Lender',type:'Lender',phone:'(803) 555-0173',email:'kpatel@palmettocap.com',lastContact:'2026-05-30',followUpDate:'2026-06-01',followUpNote:'Draw schedule review',linkedDeals:['d2','d1'],log:[{date:'2026-05-30',type:'call',note:'Reviewed draw #3 schedule.'}]},
+      {id:'c4',ini:'SL',name:'S. Lowery',company:'Triangle Retail Partners',role:'Investor',type:'Investor',phone:'(919) 555-0118',email:'slowery@trianglerp.com',lastContact:'2026-05-22',followUpDate:'2026-06-08',followUpNote:'1031 timing update',linkedDeals:['d5'],log:[{date:'2026-05-22',type:'email',note:'Sent Raleigh pad OM.'}]},
+      {id:'c5',ini:'BW',name:'B. Whitfield',company:'Upstate Brokers',role:'Broker',type:'Broker',phone:'(864) 555-0155',email:'bwhitfield@upstatebrokers.com',lastContact:'2026-05-19',followUpDate:'2026-06-12',followUpNote:'Co-broke update',linkedDeals:['d10'],log:[]},
+      {id:'c6',ini:'AC',name:'A. Cole',company:'Cole Development',role:'Developer',type:'Developer',phone:'(910) 555-0166',email:'acole@coledev.com',lastContact:'2026-05-15',followUpDate:'',followUpNote:'',linkedDeals:['d6'],log:[]},
+      {id:'c7',ini:'TH',name:'T. Hayes',company:'Carolinas Bank',role:'Lender',type:'Lender',phone:'(704) 555-0129',email:'thayes@carolinasbank.com',lastContact:'2026-05-12',followUpDate:'2026-06-20',followUpNote:'Permanent financing options',linkedDeals:['d1'],log:[]},
+    ],
+    projects:[
+      {id:'p1',name:'Columbia Mixed-Use',type:'dev',phase:'Entitlements',nextMilestone:'draw #3',progress:42,location:'Columbia, SC',budget:8500000,notes:'Mixed-use infill redevelopment.'},
+      {id:'p2',name:'Greenville Ind. Park',type:'dev',phase:'Site work',nextMilestone:'permits',progress:64,location:'Greenville, SC',budget:12000000,notes:'Industrial park phase 1 along I-85.'},
+      {id:'p3',name:'Wilmington Waterfront',type:'dev',phase:'Pre-development',nextMilestone:'zoning',progress:18,location:'Wilmington, NC',budget:5200000,notes:'Waterfront land assemblage.'},
+    ],
+    news:[
+      {geo:'York County',outlet:'Herald',hl:'Rock Hill industrial corridor sees record lease absorption in Q1'},
+      {geo:'Greenville',outlet:'Upstate Biz Journal',hl:'Industrial absorption tightens along the I-85 corridor'},
+      {geo:'Charlotte',outlet:'CoStar',hl:'Uptown office sublease availability ticks down in Q2'},
+      {geo:'Raleigh',outlet:'Triangle Business',hl:'Two new logistics parks break ground near RDU'},
+      {geo:'Charleston',outlet:'Regional Biz',hl:'Port volume drives warehouse demand in the Lowcountry'},
+      {geo:'Columbia',outlet:'The State',hl:'Midlands multifamily starts cool as financing costs hold'},
+    ],
+    filterBrok:true,filterDev:true,dealFilterBrok:true,dealFilterDev:true,
+    projFilterBrok:true,projFilterDev:true,selectedContact:'c1',selectedMapDeal:'d1',
+  };
+}
+
+// Supabase config
+const SUPA_URL = 'https://rohexbfobhsomlndedhp.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaGV4YmZvYmhzb21sbmRlZGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NjkyNTIsImV4cCI6MjA5NjA0NTI1Mn0.9Ht21sl_xszVCEGhikvx-fIpmtUayr5b4jmH7Xqx5Zc';
+const sbClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+let saveTimer = null;
+
+function loadState(){
+  // Load from localStorage first for instant startup
+  try{const r=localStorage.getItem(STORE_KEY);if(r)return JSON.parse(r);}catch(e){}
+  return defaultState();
+}
+
+function saveState(){
+  // Save to localStorage immediately for responsiveness
+  try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
+  // Debounce Supabase save — write to cloud 1.5s after last change
+  clearTimeout(saveTimer);
+  saveTimer = setTimeout(pushToSupabase, 1500);
+}
+
+async function pushToSupabase(){
+  try{
+    STATE._savedAt = Date.now();
+    await sbClient.from('cre_state').upsert({id:'main', data: STATE, updated_at: new Date().toISOString()});
+    // Flash sync dot
+    const dot = document.getElementById('syncDot');
+    if(dot){dot.style.opacity='1';setTimeout(()=>dot.style.opacity='0',1500);}
+  }catch(e){console.warn('Supabase save failed:',e);}
+}
+
+async function pullFromSupabase(){
+  try{
+    const {data, error} = await sbClient.from('cre_state').select('data, updated_at').eq('id','main').single();
+    if(error||!data) return;
+    const remote = data.data;
+    if(!remote||!remote.tasks) return;
+    // Merge: use remote if it's newer than local
+    const localTs = STATE._savedAt || 0;
+    const remoteTs = new Date(data.updated_at).getTime();
+    if(remoteTs > localTs){
+      STATE = remote;
+      STATE._savedAt = remoteTs;
+      try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
+      // Re-render everything with fresh data
+      applyTheme();
+      showTab(STATE.activeTab||'home');
+      renderWeek();renderKPIs();renderProjects();renderFollowups();
+      renderDeals();renderContacts();renderMap();
+      document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
+      document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
+      document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
+      document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
+      document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
+      document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev!==false);
+      toast('Data synced from cloud ☁️');
+    }
+  }catch(e){console.warn('Supabase pull failed:',e);}
+}
+
+// Subscribe to real-time changes from other devices
+function subscribeToSupabase(){
+  sbClient.channel('cre_state_changes')
+    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cre_state'},
+      payload=>{
+        const remote=payload.new?.data;
+        if(!remote||!remote.tasks) return;
+        const remoteTs=new Date(payload.new.updated_at).getTime();
+        const localTs=STATE._savedAt||0;
+        if(remoteTs>localTs+2000){ // 2s buffer to avoid echo
+          STATE=remote;
+          STATE._savedAt=remoteTs;
+          try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
+          renderWeek();renderKPIs();renderProjects();renderFollowups();
+          renderDeals();renderContacts();renderMap();
+          toast('Synced from another device ☁️');
+        }
+      })
+    .subscribe();
+}
+
+// Utilities
+function getWeekMonday(date){const d=new Date(date),day=d.getDay(),diff=day===0?-6:1-day;d.setDate(d.getDate()+diff);d.setHours(0,0,0,0);return d;}
+function fmt(d){return`${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;}
+function fmtDisplay(ds){if(!ds)return'';const d=new Date(ds+'T12:00:00');return d.toLocaleDateString('en-US',{month:'short',day:'numeric'});}
+function fmtMoney(v){if(!v)return'$0';if(v>=1000000)return`$${(v/1000000).toFixed(1)}M`;if(v>=1000)return`$${(v/1000).toFixed(0)}K`;return`$${v}`;}
+function initials(name){return name.split(' ').map(w=>w[0]).join('').toUpperCase().slice(0,2);}
+function uid(){return'x'+Math.random().toString(36).slice(2,9);}
+function todayStr(){return fmt(new Date());}
+function daysBetween(a,b){return Math.round((new Date(b+'T12:00:00')-new Date(a+'T12:00:00'))/(1000*60*60*24));}
+function followUpStatus(c){if(!c.followUpDate)return{txt:'none set',cls:'time'};const t=todayStr(),diff=daysBetween(t,c.followUpDate);if(diff<0)return{txt:`overdue ${Math.abs(diff)}d`,cls:'over'};if(diff===0)return{txt:'due today',cls:'today'};return{txt:fmtDisplay(c.followUpDate),cls:'time'};}
+
+// Toast
+let toastTimer;
+function toast(msg){const el=document.getElementById('toast');el.textContent=msg;el.classList.add('show');clearTimeout(toastTimer);toastTimer=setTimeout(()=>el.classList.remove('show'),2200);}
+
+// Tab nav
+function showTab(id){document.querySelectorAll('.tabnav [data-tab]').forEach(t=>t.setAttribute('aria-selected',t.dataset.tab===id?'true':'false'));document.querySelectorAll('.screen').forEach(s=>s.classList.toggle('active',s.id==='tab-'+id));STATE.activeTab=id;saveState();window.scrollTo({top:0,behavior:'instant'});}
+document.querySelectorAll('.tabnav [data-tab]').forEach(t=>t.addEventListener('click',()=>showTab(t.dataset.tab)));
+
+// Theme / settings
+function applyTheme(){document.documentElement.dataset.theme=STATE.theme;document.documentElement.dataset.density=STATE.density;const dc=document.getElementById('toggleDark');if(dc)dc.checked=STATE.theme==='dark';const cc=document.getElementById('toggleCompact');if(cc)cc.checked=STATE.density==='compact';const av=document.getElementById('userAvatar');if(av)av.textContent=STATE.initials||'WN';const ii=document.getElementById('initialsInput');if(ii)ii.value=STATE.initials||'WN';}
+function setTheme(dark){STATE.theme=dark?'dark':'light';saveState();applyTheme();}
+function setDensity(compact){STATE.density=compact?'compact':'comfortable';saveState();applyTheme();}
+function setInitials(v){STATE.initials=v.toUpperCase().slice(0,2);saveState();applyTheme();}
+function toggleSettings(){document.getElementById('settingsPanel').classList.toggle('open');}
+
+// Login
+const LOGIN_KEY='cre_hq_auth';
+const VALID_USERS=[{user:'james',pass:'Gamecock23!'},{user:'admin',pass:'crehq2024'}];
+function checkAuth(){try{return sessionStorage.getItem(LOGIN_KEY)==='true';}catch(e){return false;}}
+function doLogin(){const u=(document.getElementById('loginUser').value||'').trim().toLowerCase(),p=(document.getElementById('loginPass').value||'').trim(),ok=VALID_USERS.some(v=>v.user===u&&v.pass===p);if(ok){try{sessionStorage.setItem(LOGIN_KEY,'true');}catch(e){}document.getElementById('loginScreen').style.display='none';document.getElementById('appShell').style.display='block';init();}else{const err=document.getElementById('loginError');err.classList.add('show');document.getElementById('loginPass').value='';document.getElementById('loginPass').focus();setTimeout(()=>err.classList.remove('show'),3000);}}
+function doLogout(){try{sessionStorage.removeItem(LOGIN_KEY);}catch(e){}document.getElementById('appShell').style.display='none';document.getElementById('loginScreen').style.display='flex';document.getElementById('loginUser').value='';document.getElementById('loginPass').value='';document.getElementById('settingsPanel').classList.remove('open');}
+
+// Contact autocomplete
+let selectedDealContacts=[],selectedTaskContacts=[];
+function initContactAutocomplete(inputId,tagsId,arr){
+  const input=document.getElementById(inputId),tagsEl=document.getElementById(tagsId);
+  if(!input||!tagsEl)return;
+  renderContactTags(tagsEl,arr,tagsId,inputId);
+  let sugBox=null;
+  function closeSugg(){if(sugBox){sugBox.remove();sugBox=null;}}
+  input.addEventListener('input',()=>{
+    const q=input.value.trim().toLowerCase();closeSugg();if(!q)return;
+    const existing=STATE.contacts.filter(c=>(c.name.toLowerCase().includes(q)||(c.company||'').toLowerCase().includes(q))&&!arr.find(x=>x.id===c.id)).slice(0,6);
+    sugBox=document.createElement('div');sugBox.className='contact-suggestions';
+    existing.forEach(c=>{const item=document.createElement('div');item.className='sug-item';item.innerHTML=`<span class="sug-av">${c.ini||initials(c.name)}</span><div><div style="font-weight:500">${c.name}</div><div style="font-size:11.5px;color:var(--ink-3)">${c.company} &middot; ${c.role}</div></div>`;item.onclick=()=>{arr.push({id:c.id,name:c.name,ini:c.ini||initials(c.name),isNew:false});input.value='';closeSugg();renderContactTags(tagsEl,arr,tagsId,inputId);};sugBox.appendChild(item);});
+    const ni=document.createElement('div');ni.className='sug-item sug-new';ni.innerHTML=`<span class="sug-av" style="background:var(--brok-soft);color:var(--brok)">+</span><div>Create "<strong>${input.value.trim()}</strong>" as new contact</div>`;ni.onclick=()=>{const name=input.value.trim();arr.push({id:null,name,ini:initials(name),isNew:true});input.value='';closeSugg();renderContactTags(tagsEl,arr,tagsId,inputId);};sugBox.appendChild(ni);
+    input.parentElement.appendChild(sugBox);
+  });
+  input.addEventListener('keydown',e=>{if(e.key==='Enter'){e.preventDefault();sugBox?.querySelector('.sug-item')?.click();}if(e.key==='Escape')closeSugg();});
+}
+function renderContactTags(tagsEl,arr,tagsId,inputId){tagsEl.innerHTML=arr.map((c,i)=>`<span class="contact-tag"><span style="width:20px;height:20px;border-radius:50%;background:var(--surface-3);display:inline-grid;place-items:center;font-size:9px;font-weight:600;color:var(--ink-2)">${c.ini||initials(c.name)}</span>${c.name}${c.isNew?' <em style="font-size:10px;opacity:.7">(new)</em>':''}<button onclick="removeContactTag(${i},'${tagsId}','${inputId}')" type="button">&times;</button></span>`).join('');}
+function removeContactTag(idx,tagsId,inputId){const arr=tagsId==='dealContactTags'?selectedDealContacts:selectedTaskContacts;arr.splice(idx,1);renderContactTags(document.getElementById(tagsId),arr,tagsId,inputId);}
+function saveNewContactsFromArr(arr,dealId){return arr.map(entry=>{if(!entry.isNew&&entry.id)return entry.id;const newId=uid();STATE.contacts.push({id:newId,name:entry.name,ini:entry.ini||initials(entry.name),company:entry.company||'',role:entry.role||'',type:'Broker',phone:entry.phone||'',email:entry.email||'',lastContact:todayStr(),followUpDate:'',followUpNote:'',linkedDeals:dealId?[dealId]:[],log:[]});return newId;});}
+
+// News
+const NEWS_API_KEY='260b9efbee434627bfbb5fa41dc1cf74';
+async function fetchNews(){
+  const panel=document.getElementById('newsPanel');
+  panel.innerHTML='<div style="padding:12px 0;color:var(--ink-3);font-size:13px;text-align:center;">Loading live news&hellip;</div>';
+  try{
+    const query='commercial real estate South Carolina OR North Carolina OR Charlotte OR Greenville OR Charleston OR Raleigh OR Columbia OR "York County"';
+    const res=await fetch(`https://newsapi.org/v2/everything?q=${encodeURIComponent(query)}&language=en&sortBy=publishedAt&pageSize=10&apiKey=${NEWS_API_KEY}`);
+    const data=await res.json();
+    if(data.status==='ok'&&data.articles?.length>0){
+      panel.innerHTML=data.articles.filter(a=>a.title&&a.title!=='[Removed]').slice(0,7).map(a=>{
+        const text=(a.title+' '+(a.description||'')).toLowerCase();
+        let geo='SE Region';
+        if(text.includes('york county')||text.includes('rock hill'))geo='York County';
+        else if(text.includes('greenville'))geo='Greenville';else if(text.includes('charlotte'))geo='Charlotte';
+        else if(text.includes('charleston'))geo='Charleston';else if(text.includes('columbia'))geo='Columbia';
+        else if(text.includes('raleigh'))geo='Raleigh';else if(text.includes('spartanburg'))geo='Spartanburg';else if(text.includes('wilmington'))geo='Wilmington';
+        const outlet=(a.source?.name||'News').slice(0,22);
+        const diff=Math.floor((Date.now()-new Date(a.publishedAt))/60000);
+        const ago=diff<60?diff+'m ago':diff<1440?Math.floor(diff/60)+'h ago':Math.floor(diff/1440)+'d ago';
+        return`<div class="item"><div class="src"><span class="geo">${geo}</span> &middot; ${outlet} <span style="float:right;font-size:10px">${ago}</span></div><div class="hl" onclick="window.open('${a.url}','_blank')">${a.title.slice(0,88)}${a.title.length>88?'&hellip;':''}</div></div>`;
+      }).join('');
+    }else renderNewsFallback();
+  }catch(e){renderNewsFallback();}
+}
+function renderNewsFallback(){document.getElementById('newsPanel').innerHTML=STATE.news.slice(0,6).map(n=>`<div class="item"><div class="src"><span class="geo">${n.geo}</span> &middot; ${n.outlet}</div><div class="hl">${n.hl}</div></div>`).join('');}
+
+// Week grid
+function currentWeekMonday(){const base=getWeekMonday(new Date());base.setDate(base.getDate()+STATE.weekOffset*7);return base;}
+function renderWeek(){
+  const mon=currentWeekMonday(),days=Array.from({length:5},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return d;}),todayS=todayStr(),dayNames=['Mon','Tue','Wed','Thu','Fri'];
+  document.getElementById('weekDateRange').textContent=`${days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})} \u2013 ${days[4].toLocaleDateString('en-US',{month:'short',day:'numeric'})}, ${days[0].getFullYear()}`;
+  document.getElementById('weekGrid').innerHTML=days.map((d,i)=>{
+    const ds=fmt(d),isToday=ds===todayS;
+    const dayTasks=STATE.tasks.filter(t=>t.day===ds).sort((a,b)=>(b.importance||3)-(a.importance||3));
+    const tasksHtml=dayTasks.map(t=>{
+      const hide=(!STATE.filterBrok&&t.type==='brok')||(!STATE.filterDev&&t.type==='dev')?'hide':'';
+      const over=t.followUpDate&&t.followUpDate<todayS?'is-over':'';
+      const imp=t.importance||3;
+      const impDots=`<span class="imp i${imp}">${[1,2,3,4,5].map(n=>`<span class="${n<=imp?'on':''}"></span>`).join('')}</span>`;
+      const cEl=t.contactId?(()=>{const c=STATE.contacts.find(x=>x.id===t.contactId);return c?`<span class="contact-link" onclick="showTab('contacts');setTimeout(()=>selectContact('${c.id}'),100);event.stopPropagation()">&#128100; ${c.name}</span>`:'';})():'';
+      // Resolve project name from ID
+      const projName=t.projectId?(STATE.projects.find(p=>p.id===t.projectId)?.name||t.projectId):'';
+      const timeEl=t.time?`<span class="badge time">${t.time}</span>`:'';
+      return`<div class="task ${t.type} ${t.done?'done':''} ${over} ${hide}" data-tid="${t.id}" ondblclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'))">
+        <div class="ttop"><span class="cbx ${t.done?'on':''}" onclick="toggleTask('${t.id}',event)"></span><span class="ttl">${t.title}</span>
+        <span class="task-actions">${impDots}<button onclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'));event.stopPropagation()" title="Edit" style="color:var(--ink-3);font-size:12px;padding:2px 4px;background:none;border:none;border-radius:4px;">&#9998;</button><button onclick="deleteTask('${t.id}',event)" title="Delete">&times;</button></span></div>
+        <div class="tmeta">${projName?`<span class="tproj">${projName}</span>`:''}${cEl}${timeEl}</div>
+      </div>`;
+    }).join('');
+    return`<div class="day ${isToday?'today':''}"><div class="dh"><span class="dow">${dayNames[i]}</span><span class="dn">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}${isToday?' \u00b7 TODAY':''}</span></div><div class="dbody" id="day-${ds}">${tasksHtml}<div class="addt" onclick="openAddTask('${ds}')">+ add task</div></div></div>`;
+  }).join('');
+  updateWeekRing();
+}
+
+function toggleTask(id,e){e.stopPropagation();const t=STATE.tasks.find(x=>x.id===id);if(t){t.done=!t.done;saveState();updateWeekRing();const el=document.querySelector(`[data-tid="${id}"]`);if(el){el.classList.toggle('done',t.done);el.querySelector('.cbx').classList.toggle('on',t.done);}}}
+function deleteTask(id,e){e.stopPropagation();if(!confirm('Delete this task?'))return;STATE.tasks=STATE.tasks.filter(x=>x.id!==id);saveState();renderWeek();renderKPIs();}
+function toggleFilter(type){if(type==='brok')STATE.filterBrok=!STATE.filterBrok;else STATE.filterDev=!STATE.filterDev;saveState();document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok);document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev);document.querySelectorAll('#weekGrid .task').forEach(el=>{const t=STATE.tasks.find(x=>x.id===el.dataset.tid);if(t)el.classList.toggle('hide',(t.type==='brok'&&!STATE.filterBrok)||(t.type==='dev'&&!STATE.filterDev));});}
+function navWeek(dir){if(dir===0)STATE.weekOffset=0;else STATE.weekOffset+=dir;saveState();renderWeek();}
+function updateWeekRing(){const all=document.querySelectorAll('#weekGrid .task'),done=document.querySelectorAll('#weekGrid .task.done').length,total=all.length,pct=total?Math.round(done/total*100):0,C=2*Math.PI*34;const prog=document.getElementById('weekProg');if(prog)prog.style.strokeDashoffset=(C*(1-pct/100)).toFixed(1);document.getElementById('weekPct').textContent=pct+'%';document.getElementById('weekCount').textContent=`${done} of ${total}`;}
+
+// KPIs
+function renderKPIs(){
+  const mon=currentWeekMonday(),weekDates=new Set(Array.from({length:5},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return fmt(d);}));
+  const weekTasks=STATE.tasks.filter(t=>weekDates.has(t.day)),todayT=weekTasks.filter(t=>t.day===todayStr());
+  document.getElementById('kpi-tasks').textContent=weekTasks.length;
+  document.getElementById('kpi-tasks-sub').textContent=`${todayT.length} today \u00b7 ${weekTasks.length-todayT.length} later`;
+  const today=todayStr(),overdue=STATE.contacts.filter(c=>c.followUpDate&&c.followUpDate<today);
+  document.getElementById('kpi-overdue').textContent=overdue.length;
+  document.getElementById('kpi-overdue-names').textContent=overdue.slice(0,3).map(c=>c.name.split(' ')[1]).join(' \u00b7 ')||'None';
+  document.getElementById('kpi-overdue-card').classList.toggle('alert',overdue.length>0);
+  const active=STATE.deals.filter(d=>d.stage!=='closed');
+  document.getElementById('kpi-deals').textContent=active.length;
+  document.getElementById('kpi-deals-sub').textContent=`${active.filter(d=>d.type==='brok').length} brokerage \u00b7 ${active.filter(d=>d.type==='dev').length} development`;
+  document.getElementById('tab-deals-count').textContent=active.length;
+  document.getElementById('tab-contacts-count').textContent=STATE.contacts.length;
+}
+
+// Projects
+function renderProjects(){
+  const panel=document.getElementById('projectsPanel');
+  if(panel)panel.innerHTML=STATE.projects.slice(0,4).map(p=>`<div class="proj-item" style="cursor:pointer" onclick="showTab('projects')"><div class="pt"><span class="pn">${p.name}</span><span class="tag ${p.type}">${p.type==='dev'?'Dev':'Brok'}</span></div><div class="pm">${p.phase} &middot; next: ${p.nextMilestone}</div><div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div></div>`).join('');
+  renderProjectsTab();
+}
+function renderProjectsTab(){
+  const grid=document.getElementById('projectsGrid');if(!grid)return;
+  const pb=STATE.projFilterBrok!==false,pd=STATE.projFilterDev!==false;
+  const projs=STATE.projects.filter(p=>(p.type==='brok'&&pb)||(p.type==='dev'&&pd));
+  document.getElementById('tab-projects-count').textContent=STATE.projects.length;
+  document.getElementById('proj-summary').textContent=`${STATE.projects.length} projects \u00b7 ${STATE.projects.filter(p=>p.type==='dev').length} dev \u00b7 ${STATE.projects.filter(p=>p.type==='brok').length} brok`;
+  if(!projs.length){grid.innerHTML='<div class="proj-empty" style="grid-column:1/-1">No projects yet.</div>';return;}
+  grid.innerHTML=projs.map(p=>{
+    const linkedDeals=STATE.deals.filter(d=>d.projectId===p.id);
+    const dealsHtml=linkedDeals.length?linkedDeals.map(d=>{const sl=STAGES.find(s=>s.id===d.stage)?.label||d.stage;return`<div class="proj-deal-row"><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span><span class="dname">${d.name}</span><span class="dstage">${sl}</span><span class="dval">${fmtMoney(d.value)}</span></div>`;}).join(''):'<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No deals linked. Edit a deal to link here.</div>';
+    const projTasks=STATE.tasks.filter(t=>t.projectId===p.id||t.projectId===p.name);
+    const openT=projTasks.filter(t=>!t.done).length,doneT=projTasks.filter(t=>t.done).length;
+    const tasksHtml=projTasks.length?projTasks.slice(0,5).map(t=>`<div class="proj-task-row"><span class="cbx-sm ${t.done?'on':''}"></span><span style="${t.done?'color:var(--ink-3);text-decoration:line-through':''};flex:1">${t.title}</span><span class="badge time" style="font-size:10px">${t.time||fmtDisplay(t.day)}</span></div>`).join('')+(projTasks.length>5?`<div style="font-size:11px;color:var(--ink-3);padding-top:4px">+${projTasks.length-5} more</div>`:''):'<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No tasks yet.</div>';
+    return`<div class="proj-card ${p.type}">
+      <div class="proj-card-h"><div><div class="pname">${p.name}</div><div style="display:flex;gap:8px;align-items:center;margin-top:5px;"><span class="tag ${p.type}">${p.type==='dev'?'Development':'Brokerage'}</span>${p.location?`<span style="font-size:12px;color:var(--ink-3)">${p.location}</span>`:''}</div></div><div class="pactions"><button class="btn sm" onclick="openModal('project',STATE.projects.find(x=>x.id==='${p.id}'))">Edit</button><button class="btn sm danger" onclick="deleteProject('${p.id}')">&#10005;</button></div></div>
+      <div class="proj-meta"><span style="font-weight:500">${p.phase}</span> &middot; Next: ${p.nextMilestone}${p.budget?` &middot; Budget: ${fmtMoney(p.budget)}`:''}</div>
+      ${p.notes?`<div style="padding:0 16px 10px;font-size:12.5px;color:var(--ink-2);font-style:italic">${p.notes}</div>`:''}
+      <div class="proj-progress"><div class="bar-label"><span>Progress</span><span style="font-family:var(--mono);font-weight:600">${p.progress}%</span></div><div class="bar ${p.type}"><span style="width:${p.progress}%"></span></div></div>
+      <div class="proj-deals-section"><div class="pdeal-h">Linked deals (${linkedDeals.length})</div>${dealsHtml}<div style="margin-top:8px;"><button class="btn sm" onclick="openModal('deal',{projectId:'${p.id}',type:'${p.type}'})" style="font-size:11.5px">+ Link new deal</button></div></div>
+      <div class="proj-tasks-section"><div class="ptask-h">Tasks (${openT} open &middot; ${doneT} done)</div>${tasksHtml}<div style="margin-top:8px;"><button class="btn sm" onclick="openAddTask('${new Date().toISOString().slice(0,10)}','${p.id}')" style="font-size:11.5px">+ Add task</button></div></div>
+    </div>`;
+  }).join('');
+}
+function toggleProjFilter(type){if(type==='brok')STATE.projFilterBrok=!(STATE.projFilterBrok!==false);else STATE.projFilterDev=!(STATE.projFilterDev!==false);saveState();document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);renderProjectsTab();}
+function deleteProject(id){if(!confirm('Delete project? Linked deals will be unlinked.'))return;STATE.deals.forEach(d=>{if(d.projectId===id)delete d.projectId;});STATE.projects=STATE.projects.filter(x=>x.id!==id);saveState();renderProjects();renderDeals();toast('Project deleted.');}
+
+// Follow-ups
+function renderFollowups(){
+  const today=todayStr(),overdue=STATE.contacts.filter(c=>c.followUpDate&&c.followUpDate<today).sort((a,b)=>a.followUpDate.localeCompare(b.followUpDate)),dueToday=STATE.contacts.filter(c=>c.followUpDate===today),all=[...overdue,...dueToday];
+  document.getElementById('followupBadge').textContent=`${overdue.length} overdue`;
+  document.getElementById('followupsPanel').innerHTML=all.length?all.slice(0,5).map(c=>{const fu=followUpStatus(c);return`<div class="fu" onclick="showTab('contacts');setTimeout(()=>selectContact('${c.id}'),100)"><span class="av">${c.ini}</span><div><div class="who">${c.name}</div><div class="why">${c.followUpNote||'Follow-up due'} &middot; ${fu.txt}</div></div><span class="badge ${fu.cls}">${fu.cls==='over'?'!':'due'}</span></div>`;}).join(''):'<div style="padding:12px 0;color:var(--ink-3);font-size:13px;">No overdue follow-ups &#127881;</div>';
+}
+
+// Deal tracker
+const STAGES=[{id:'prelim',label:'Prelim',prob:'10%'},{id:'loi',label:'LOI',prob:'30%'},{id:'lease-sale',label:'Lease / Sale',prob:'60%'},{id:'under-contract',label:'Under Contract',prob:'85%'},{id:'closed',label:'Closed',prob:'100%'}];
+function dealFee(d){return d.fee||Math.round(d.value*0.035*(STAGES.findIndex(s=>s.id===d.stage)+1)/5);}
+function toggleDealFilter(type){if(type==='brok')STATE.dealFilterBrok=!STATE.dealFilterBrok;else STATE.dealFilterDev=!STATE.dealFilterDev;saveState();document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok);document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev);renderDeals();}
+function renderDeals(){
+  const active=STATE.deals.filter(d=>d.stage!=='closed');
+  document.getElementById('deal-summary').textContent=`${active.length} active deals \u00b7 ${fmtMoney(active.reduce((s,d)=>s+dealFee(d),0))} gross fees`;
+  document.getElementById('tab-map-count').textContent=active.length;
+  document.getElementById('kanban').innerHTML=STAGES.map(stage=>{
+    let deals=STATE.deals.filter(d=>d.stage===stage.id);
+    if(!STATE.dealFilterBrok)deals=deals.filter(d=>d.type!=='brok');
+    if(!STATE.dealFilterDev)deals=deals.filter(d=>d.type!=='dev');
+    const fees=deals.reduce((s,d)=>s+dealFee(d),0);
+    const dealsHtml=deals.map(d=>{
+      const bars=Array.from({length:4},(_,i)=>`<i class="${i<d.level?'on':''}"></i>`).join('');
+      const levelCls=d.level===4?'max':d.level>=3?'hot':'';
+      // Show linked project name on card
+      const projName=d.projectId?(STATE.projects.find(p=>p.id===d.projectId)?.name||''):'';
+      // Build key dates mini-timeline for deal card
+      const datesHtml=(()=>{const parts=[];if(d.dateFirstContact)parts.push(`<span title="First contact">&#128222; ${fmtDisplay(d.dateFirstContact)}</span>`);if(d.dateLoiSent)parts.push(`<span title="LOI sent">&#128221; ${fmtDisplay(d.dateLoiSent)}</span>`);if(d.dateLeaseSent)parts.push(`<span title="Lease sent">&#128196; ${fmtDisplay(d.dateLeaseSent)}</span>`);return parts.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:7px;font-size:10.5px;color:var(--ink-3);font-family:var(--mono)">${parts.join('')}</div>`:''})();
+      if(stage.id==='closed')return`<div class="deal ${d.type} closed-deal" onclick="openEditDeal('${d.id}')"><div class="dn">${d.name}</div><div class="ds">${d.location} &middot; ${d.size||'&mdash;'}</div>${datesHtml}<div class="df"><span class="badge good">won &middot; ${fmtMoney(d.fee||dealFee(d))}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div></div>`;
+      const cc=STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(d.id));
+      return`<div class="deal ${d.type}" onclick="openEditDeal('${d.id}')"><div class="dn">${d.name}</div><div class="ds">${d.location} &middot; ${d.size||'&mdash;'}</div>${projName?`<div style="font-size:11px;color:var(--ink-3);margin-bottom:6px;">&#128193; ${projName}</div>`:''}<div class="df"><span class="level ${levelCls}">${bars}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>${datesHtml}${cc.length?`<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px;">${cc.map(c=>`<span style="font-size:11px;background:var(--brok-soft);color:var(--brok);padding:2px 7px;border-radius:99px;font-weight:500">&#128100; ${c.name}</span>`).join('')}</div>`:''}</div>`;
+    }).join('');
+    return`<div class="kcol"><div class="kh"><span class="kt">${stage.label}</span><span class="ks">${deals.length}</span></div><div class="ksum">${stage.prob} &middot; ${fmtMoney(fees)} fees</div><div class="kb">${dealsHtml}<div class="addt" onclick="openModalForStage('${stage.id}')">+ new deal</div></div></div>`;
+  }).join('');
+}
+
+// Contacts
+let contactTypeFilter='all';
+function setContactType(type){contactTypeFilter=type;document.querySelectorAll('[data-ctype]').forEach(b=>b.classList.toggle('on',b.dataset.ctype===type));filterContacts();}
+function filterContacts(){const q=document.getElementById('contactSearch').value.toLowerCase();document.querySelectorAll('#contactRows tr').forEach(tr=>{const c=STATE.contacts.find(x=>x.id===tr.dataset.cid);if(!c)return;tr.style.display=((contactTypeFilter==='all'||c.type===contactTypeFilter)&&(!q||c.name.toLowerCase().includes(q)||c.company.toLowerCase().includes(q)))?'':'none';});}
+function renderContacts(){
+  document.getElementById('contactRows').innerHTML=STATE.contacts.map(c=>{const fu=followUpStatus(c);return`<tr class="clickable ${c.id===STATE.selectedContact?'sel':''}" data-cid="${c.id}" onclick="selectContact('${c.id}')"><td><div class="ctname"><span class="av-sm">${c.ini}</span>${c.name}</div></td><td>${c.company}</td><td>${c.role}</td><td class="mono tiny">${fmtDisplay(c.lastContact)||'&mdash;'}</td><td><span class="badge ${fu.cls}">${fu.txt}</span></td></tr>`;}).join('');
+  if(STATE.selectedContact)renderContactDetail(STATE.selectedContact);
+}
+function selectContact(id){STATE.selectedContact=id;saveState();document.querySelectorAll('#contactRows tr').forEach(tr=>tr.classList.toggle('sel',tr.dataset.cid===id));renderContactDetail(id);}
+function renderContactDetail(id){
+  const c=STATE.contacts.find(x=>x.id===id),panel=document.getElementById('contactDetail');
+  if(!c){panel.innerHTML='<div style="padding:40px;text-align:center;color:var(--ink-3)">Select a contact</div>';return;}
+  const fu=followUpStatus(c);
+  const deals=(c.linkedDeals||[]).map(did=>{const d=STATE.deals.find(x=>x.id===did);if(!d)return'';const sl=STAGES.find(s=>s.id===d.stage)?.label||d.stage;return`<div class="link" style="cursor:pointer" onclick="showTab('deals');setTimeout(()=>openEditDeal('${did}'),100)"><span style="font-size:13px;font-weight:500">${d.name}</span><div style="display:flex;gap:6px;align-items:center"><span style="font-size:11.5px;color:var(--ink-3)">${sl}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div></div>`;}).join('');
+  const log=(c.log||[]).map(l=>`<div class="logitem"><div class="when">${fmtDisplay(l.date)} &middot; ${l.type}</div>${l.note}</div>`).join('');
+  panel.innerHTML=`<div class="dtop"><div class="av-lg">${c.ini}</div><div><div class="nm">${c.name}</div><div class="co">${c.company} &middot; ${c.role}</div></div><div style="margin-left:auto;display:flex;gap:6px;"><button class="btn sm" onclick="openEditContact('${c.id}')">Edit</button><button class="btn sm danger" onclick="deleteContact('${c.id}')">&#10005;</button></div></div>
+    <div class="field"><span class="fl">Phone</span><span class="fv mono">${c.phone||'&mdash;'}</span></div>
+    <div class="field"><span class="fl">Email</span><span class="fv">${c.email||'&mdash;'}</span></div>
+    <div class="field"><span class="fl">Type</span><span class="fv">${c.type||'&mdash;'}</span></div>
+    <div class="field"><span class="fl">Last contact</span><span class="fv">${fmtDisplay(c.lastContact)||'&mdash;'}</span></div>
+    <div class="field"><span class="fl">Follow-up</span><span class="fv"><span class="badge ${fu.cls}">${fu.txt}</span></span></div>
+    ${deals?`<div class="subhead">Linked deals</div>${deals}`:''}
+    <div class="subhead">Interaction log</div>
+    ${log||'<div style="padding:8px 16px;color:var(--ink-3);font-size:12px;">No interactions logged</div>'}
+    <div style="padding:12px 16px 16px;"><button class="btn" style="width:100%;justify-content:center" onclick="logInteraction('${c.id}')">+ Log interaction</button></div>`;
+}
+function deleteContact(id){if(!confirm('Delete this contact?'))return;STATE.contacts=STATE.contacts.filter(x=>x.id!==id);if(STATE.selectedContact===id)STATE.selectedContact=STATE.contacts[0]?.id||'';saveState();renderContacts();renderFollowups();renderKPIs();}
+function logInteraction(id){const c=STATE.contacts.find(x=>x.id===id);if(!c)return;const note=prompt('Log note (e.g. "Quick call re: lease terms")');if(!note)return;if(!c.log)c.log=[];c.log.unshift({date:todayStr(),type:'call',note});c.lastContact=todayStr();saveState();renderContactDetail(id);renderFollowups();toast('Interaction logged.');}
+
+// Map
+const CITY_POSITIONS={'Greenville, SC':{x:16,y:58},'Spartanburg, SC':{x:22,y:53},'Charlotte, NC':{x:37,y:38},'Columbia, SC':{x:38,y:68},'Charleston, SC':{x:56,y:84},'Raleigh, NC':{x:66,y:32},'Wilmington, NC':{x:76,y:60},'Mauldin, SC':{x:17,y:60}};
+function getPos(deal){if(CITY_POSITIONS[deal.location])return CITY_POSITIONS[deal.location];const l=deal.location.toLowerCase();if(l.includes('greenville'))return{x:16,y:58};if(l.includes('charlotte'))return{x:37,y:38};if(l.includes('columbia'))return{x:38,y:68};if(l.includes('charleston'))return{x:56,y:84};if(l.includes('raleigh'))return{x:66,y:32};if(l.includes('wilmington'))return{x:76,y:60};if(l.includes('spartanburg'))return{x:22,y:53};return{x:40,y:50};}
+function renderMap(){
+  const mapDeals=STATE.deals.filter(d=>d.stage!=='closed');
+  document.getElementById('mapCount').textContent=mapDeals.length;
+  document.getElementById('mapPins').innerHTML=mapDeals.map((d,i)=>{const pos=getPos(d);return`<div class="pin ${d.type} ${d.id===STATE.selectedMapDeal?'active':''}" data-did="${d.id}" style="left:${pos.x}%;top:${pos.y}%" onclick="selectMapDeal('${d.id}')"><div class="pin-head"><span>${i+1}</span></div><div class="pin-lbl">${d.location.split(',')[0]}</div></div>`;}).join('');
+  document.getElementById('mapRows').innerHTML='<div class="panel-b" style="padding:8px 0;">'+mapDeals.map((d,i)=>`<div class="drow ${d.type} ${d.id===STATE.selectedMapDeal?'sel':''}" data-did="${d.id}" onclick="selectMapDeal('${d.id}')"><span class="pn">${i+1}</span><div><div class="dn">${d.name}</div><div class="dl">${d.location} &middot; ${STAGES.find(s=>s.id===d.stage)?.label||d.stage} &middot; ${fmtMoney(d.value)}</div></div><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>`).join('')+'</div>';
+}
+function selectMapDeal(id){STATE.selectedMapDeal=id;saveState();renderMap();document.querySelector(`.drow[data-did="${id}"]`)?.scrollIntoView({block:'nearest',behavior:'smooth'});}
+function toggleMapFilter(btn,type){btn.dataset.on=btn.dataset.on==='true'?'false':'true';btn.classList.toggle('on',btn.dataset.on==='true');renderMap();}
+
+// Modals
+function openModal(type,data={}){const backdrop=document.getElementById('modalBackdrop'),box=document.getElementById('modalBox');backdrop.style.display='flex';if(type==='task')renderTaskModal(box,data);else if(type==='deal')renderDealModal(box,data);else if(type==='contact')box.innerHTML=contactModalHTML(data);else if(type==='project')box.innerHTML=projectModalHTML(data);else if(type==='quickadd')box.innerHTML=quickAddHTML();}
+function closeModal(){document.getElementById('modalBackdrop').style.display='none';}
+function openAddTask(dayStr,projId=''){openModal('task',{day:dayStr,projectId:projId});}
+function openEditDeal(id){const d=STATE.deals.find(x=>x.id===id);if(d)openModal('deal',d);}
+function openModalForStage(stage){openModal('deal',{stage});}
+function openEditContact(id){const c=STATE.contacts.find(x=>x.id===id);if(c)openModal('contact',c);}
+function openQuickAdd(){openModal('quickadd');}
+function openSearch(){showTab('contacts');document.getElementById('contactSearch').focus();}
+
+// Importance picker
+function impPickerHTML(val){const labels=['','Low','Low-Med','Medium','High','Critical'];return`<div class="imp-picker" id="impPicker">${[1,2,3,4,5].map(n=>`<button type="button" data-v="${n}" class="${(val||3)===n?'sel':''}" onclick="selectImp(${n})" title="${labels[n]}">${n}</button>`).join('')}<span id="impLabel" style="font-size:12px;color:var(--ink-3);margin-left:4px">${labels[val||3]}</span></div><input type="hidden" id="f-importance" value="${val||3}"/>`;}
+function selectImp(n){document.getElementById('f-importance').value=n;document.querySelectorAll('#impPicker button').forEach(b=>b.classList.toggle('sel',parseInt(b.dataset.v)===n));document.getElementById('impLabel').textContent=['','Low','Low-Med','Medium','High','Critical'][n];}
+
+// TASK MODAL — no status badge, new follow-up UX (days OR date side-by-side)
+function renderTaskModal(box,data={}){
+  const days=[];const mon=currentWeekMonday();
+  for(let i=0;i<5;i++){const d=new Date(mon);d.setDate(d.getDate()+i);days.push({val:fmt(d),label:d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});}
+  const daysOpts=days.map(d=>`<option value="${d.val}" ${data.day===d.val?'selected':''}>${d.label}</option>`).join('');
+  const projOpts=STATE.projects.map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('');
+  box.innerHTML=`
+    <div class="modal-h"><h3>${data.id?'Edit task':'Add task'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="form-row"><label>Task title</label><input id="f-title" type="text" value="${data.title||''}" placeholder="e.g. Call back J. Mercer" autofocus/></div>
+      <div class="form-row"><label>Importance</label>${impPickerHTML(data.importance||3)}</div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Type</label><select id="f-type"><option value="brok" ${data.type==='brok'?'selected':''}>Brokerage</option><option value="dev" ${data.type==='dev'?'selected':''}>Development</option></select></div>
+        <div class="form-row" style="margin:0"><label>Day</label><select id="f-day">${daysOpts}</select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Time (optional)</label><input id="f-time" type="text" value="${data.time||''}" placeholder="e.g. 10:30a"/></div>
+        <div class="form-row" style="margin:0"><label>Link to project</label><select id="f-proj"><option value="">— none —</option>${projOpts}</select></div>
+      </div>
+      <div class="form-row">
+        <label>Contact (optional)</label>
+        <div class="contact-input-wrap"><input type="text" id="taskContactInput" placeholder="Type a name to search or add&hellip;" autocomplete="off"/></div>
+        <div class="contact-tags" id="taskContactTags"></div>
+      </div>
+      <div class="form-row">
+        <label>Follow-up needed?</label>
+        <div class="fu-row">
+          <div><input type="number" id="f-fu-days" min="1" max="365" placeholder="In how many days" style="width:100%"/></div>
+          <div class="fu-or">or</div>
+          <div><input type="date" id="f-fu-date" value="${data.followUpDate||''}" style="width:100%"/></div>
+        </div>
+        <div style="font-size:11.5px;color:var(--ink-3);margin-top:5px;">Leave both blank for no follow-up</div>
+      </div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteTaskById('${data.id}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveTask('${data.id||''}')">Save task</button>
+    </div>`;
+  selectedTaskContacts=data.contactId?(()=>{const c=STATE.contacts.find(x=>x.id===data.contactId);return c?[{id:c.id,name:c.name,ini:c.ini||initials(c.name),isNew:false}]:[]; })():[];
+  setTimeout(()=>{
+    initContactAutocomplete('taskContactInput','taskContactTags',selectedTaskContacts);
+    const daysEl=document.getElementById('f-fu-days'),dateEl=document.getElementById('f-fu-date');
+    if(daysEl)daysEl.addEventListener('input',()=>{if(daysEl.value)dateEl.value='';});
+    if(dateEl)dateEl.addEventListener('input',()=>{if(dateEl.value)daysEl.value='';});
+  },50);
+}
+function saveTask(existingId){
+  const title=document.getElementById('f-title').value.trim();
+  if(!title){toast('Please enter a task title.');return;}
+  const type=document.getElementById('f-type').value,day=document.getElementById('f-day').value,time=document.getElementById('f-time').value.trim(),projId=document.getElementById('f-proj').value,importance=parseInt(document.getElementById('f-importance').value)||3;
+  const fuDays=document.getElementById('f-fu-days')?.value,fuDate=document.getElementById('f-fu-date')?.value;
+  let followUpDate='';
+  if(fuDate)followUpDate=fuDate;
+  else if(fuDays&&parseInt(fuDays)>0){const d=new Date();d.setDate(d.getDate()+parseInt(fuDays));followUpDate=fmt(d);}
+  const taskContactIds=saveNewContactsFromArr(selectedTaskContacts,null),contactId=taskContactIds[0]||'';
+  if(contactId&&followUpDate){const c=STATE.contacts.find(x=>x.id===contactId);if(c){c.followUpDate=followUpDate;c.followUpNote=`Follow-up from task: ${title}`;}}
+  if(existingId){const t=STATE.tasks.find(x=>x.id===existingId);if(t)Object.assign(t,{title,type,day,time,projectId:projId,importance,contactId,followUpDate});}
+  else STATE.tasks.push({id:uid(),title,type,day,time,projectId:projId,done:false,importance,contactId,followUpDate});
+  const newCount=selectedTaskContacts.filter(c=>c.isNew).length;selectedTaskContacts=[];
+  saveState();closeModal();renderWeek();renderKPIs();renderFollowups();renderContacts();
+  toast(existingId?'Task updated.':`Task added.${newCount?' '+newCount+' new contact.':''}${contactId&&followUpDate?' Follow-up scheduled.':''}`);
+}
+function deleteTaskById(id){if(!confirm('Delete task?'))return;STATE.tasks=STATE.tasks.filter(x=>x.id!==id);saveState();closeModal();renderWeek();renderKPIs();toast('Task deleted.');}
+
+// DEAL MODAL — with quick contact entry section
+function renderDealModal(box,data={}){
+  const stageOpts=STAGES.map(s=>`<option value="${s.id}" ${data.stage===s.id?'selected':''}>${s.label}</option>`).join('');
+  selectedDealContacts=data.id?STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(data.id)).map(c=>({id:c.id,name:c.name,ini:c.ini||initials(c.name),isNew:false})):[];
+  box.innerHTML=`
+    <div class="modal-h"><h3>${data.id?'Edit deal':'Add deal'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="form-row"><label>Deal name</label><input id="f-dname" type="text" value="${data.name||''}" placeholder="e.g. Rock Hill Distribution Center" autofocus/></div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Type</label><select id="f-dtype"><option value="brok" ${data.type==='brok'?'selected':''}>Brokerage</option><option value="dev" ${data.type==='dev'?'selected':''}>Development</option></select></div>
+        <div class="form-row" style="margin:0"><label>Stage</label><select id="f-dstage">${stageOpts}</select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Location</label><input id="f-dloc" type="text" value="${data.location||''}" placeholder="e.g. York County, SC"/></div>
+        <div class="form-row" style="margin:0"><label>Size / desc</label><input id="f-dsize" type="text" value="${data.size||''}" placeholder="e.g. 45k sf &middot; lease"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Heat level (1&ndash;4)</label>
+          <select id="f-dlevel">${[0,1,2,3,4].map(n=>`<option value="${n}" ${(data.level||0)===n?'selected':''}>${n} &mdash; ${['None','Cold','Warm','Hot','Max'][n]}</option>`).join('')}</select>
+        </div>
+        <div class="form-row" style="margin:0"><label>Link to project</label>
+          <select id="f-dproject"><option value="">— standalone —</option>${STATE.projects.map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Linked contacts — search or create</label>
+        <div class="contact-input-wrap"><input type="text" id="dealContactInput" placeholder="Type a name&hellip;" autocomplete="off"/></div>
+        <div class="contact-tags" id="dealContactTags"></div>
+      </div>
+      <div class="form-row">
+        <label>Quick contact entry <span style="font-weight:400;text-transform:none;letter-spacing:0;color:var(--ink-3)">(optional &mdash; adds a new contact on save)</span></label>
+        <div class="qc-box">
+          <div class="qc-box-title">New contact details</div>
+          <div class="form-row-2" style="margin-bottom:10px;">
+            <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">Name</label><input id="qc-name" type="text" placeholder="Jane Smith"/></div>
+            <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">Company</label><input id="qc-company" type="text" placeholder="Acme Realty"/></div>
+          </div>
+          <div class="form-row-2" style="margin:0;">
+            <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">Phone</label><input id="qc-phone" type="text" placeholder="(864) 555-0100"/></div>
+            <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">Email</label><input id="qc-email" type="email" placeholder="jane@company.com"/></div>
+          </div>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Key dates</label>
+        <div style="display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;">
+          <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">First contact</label><input id="f-ddate-first" type="date" value="${data.dateFirstContact||''}"/></div>
+          <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">LOI sent</label><input id="f-ddate-loi" type="date" value="${data.dateLoiSent||''}"/></div>
+          <div><label style="font-size:11px;color:var(--ink-3);display:block;margin-bottom:4px;text-transform:none;letter-spacing:0;">Lease sent</label><input id="f-ddate-lease" type="date" value="${data.dateLeaseSent||''}"/></div>
+        </div>
+      </div>
+      ${data.stage==='closed'?`<div class="form-row"><label>Commission ($)</label><input id="f-dfee" type="number" value="${data.fee||''}" placeholder="42000"/></div>`:''}
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteDeal('${data.id}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveDeal('${data.id||''}')">Save deal</button>
+    </div>`;
+  setTimeout(()=>initContactAutocomplete('dealContactInput','dealContactTags',selectedDealContacts),50);
+}
+function saveDeal(existingId){
+  const name=document.getElementById('f-dname').value.trim();if(!name){toast('Please enter a deal name.');return;}
+  const type=document.getElementById('f-dtype').value,stage=document.getElementById('f-dstage').value,location=document.getElementById('f-dloc').value.trim(),size=document.getElementById('f-dsize').value.trim(),level=parseInt(document.getElementById('f-dlevel').value)||0;
+  const feeEl=document.getElementById('f-dfee'),fee=feeEl?parseInt(feeEl.value)||0:0;
+  const projectId=document.getElementById('f-dproject').value;
+  const dateFirstContact=document.getElementById('f-ddate-first')?.value||'';
+  const dateLoiSent=document.getElementById('f-ddate-loi')?.value||'';
+  const dateLeaseSent=document.getElementById('f-ddate-lease')?.value||'';
+  // Quick contact entry
+  const qcName=(document.getElementById('qc-name')?.value||'').trim();
+  const qcCompany=(document.getElementById('qc-company')?.value||'').trim();
+  const qcPhone=(document.getElementById('qc-phone')?.value||'').trim();
+  const qcEmail=(document.getElementById('qc-email')?.value||'').trim();
+  const dealId=existingId||uid();
+  if(qcName&&!selectedDealContacts.find(c=>c.name.toLowerCase()===qcName.toLowerCase())){
+    const existing=STATE.contacts.find(c=>c.name.toLowerCase()===qcName.toLowerCase()||(qcEmail&&c.email===qcEmail));
+    if(existing){if(qcCompany)existing.company=qcCompany;if(qcPhone)existing.phone=qcPhone;if(qcEmail)existing.email=qcEmail;if(!selectedDealContacts.find(c=>c.id===existing.id))selectedDealContacts.push({id:existing.id,name:existing.name,ini:existing.ini,isNew:false});}
+    else selectedDealContacts.push({id:null,name:qcName,ini:initials(qcName),isNew:true,company:qcCompany,phone:qcPhone,email:qcEmail});
+  }
+  const finalContactIds=saveNewContactsFromArr(selectedDealContacts,dealId);
+  // Fill in quick contact details on the newly created contact
+  if(qcName){const nc=STATE.contacts.find(c=>c.name===qcName);if(nc){if(qcCompany)nc.company=qcCompany;if(qcPhone)nc.phone=qcPhone;if(qcEmail)nc.email=qcEmail;}}
+  STATE.contacts.forEach(c=>{c.linkedDeals=(c.linkedDeals||[]).filter(id=>id!==dealId);});
+  finalContactIds.forEach(cid=>{const c=STATE.contacts.find(x=>x.id===cid);if(c){if(!c.linkedDeals)c.linkedDeals=[];if(!c.linkedDeals.includes(dealId))c.linkedDeals.push(dealId);}});
+  if(existingId){const d=STATE.deals.find(x=>x.id===existingId);if(d)Object.assign(d,{name,type,stage,location,size,level,fee,projectId,dateFirstContact,dateLoiSent,dateLeaseSent});}
+  else STATE.deals.push({id:dealId,name,type,stage,location,size,level,fee,projectId,dateFirstContact,dateLoiSent,dateLeaseSent,value:0});
+  saveState();closeModal();renderDeals();renderKPIs();renderMap();renderContacts();renderContactDetail(STATE.selectedContact);renderProjectsTab();
+  const newCount=selectedDealContacts.filter(c=>c.isNew).length;
+  toast(existingId?`Deal updated \u00b7 ${finalContactIds.length} contact(s) linked`:`Deal added \u00b7 ${finalContactIds.length} contact(s) linked${newCount?` \u00b7 ${newCount} new contact(s) created`:''}`);
+  selectedDealContacts=[];
+}
+function deleteDeal(id){if(!confirm('Delete this deal?'))return;STATE.deals=STATE.deals.filter(x=>x.id!==id);saveState();closeModal();renderDeals();renderKPIs();renderMap();toast('Deal deleted.');}
+
+// Contact modal
+function contactModalHTML(data={}){
+  const typeOpts=['Broker','Developer','Tenant','Investor','Lender','Other'].map(t=>`<option value="${t}" ${data.type===t?'selected':''}>${t}</option>`).join('');
+  const dealOpts=STATE.deals.map(d=>`<option value="${d.id}" ${(data.linkedDeals||[]).includes(d.id)?'selected':''}>${d.name}</option>`).join('');
+  return`<div class="modal-h"><h3>${data.id?'Edit contact':'Add contact'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Full name</label><input id="f-cname" type="text" value="${data.name||''}" placeholder="Jane Smith"/></div>
+        <div class="form-row" style="margin:0"><label>Type</label><select id="f-ctype">${typeOpts}</select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Company</label><input id="f-cco" type="text" value="${data.company||''}" placeholder="Acme Realty"/></div>
+        <div class="form-row" style="margin:0"><label>Role / title</label><input id="f-crole" type="text" value="${data.role||''}" placeholder="Tenant rep"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Phone</label><input id="f-cphone" type="text" value="${data.phone||''}" placeholder="(864) 555-0100"/></div>
+        <div class="form-row" style="margin:0"><label>Email</label><input id="f-cemail" type="email" value="${data.email||''}" placeholder="jane@company.com"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Last contact</label><input id="f-clast" type="date" value="${data.lastContact||''}"/></div>
+        <div class="form-row" style="margin:0"><label>Follow-up date</label><input id="f-cfu" type="date" value="${data.followUpDate||''}"/></div>
+      </div>
+      <div class="form-row"><label>Follow-up note</label><input id="f-cfunote" type="text" value="${data.followUpNote||''}" placeholder="e.g. Call re: LOI terms"/></div>
+      <div class="form-row"><label>Linked deals (Ctrl/Cmd to multi-select)</label><select id="f-cdeals" multiple style="height:100px;">${dealOpts}</select></div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteContactById('${data.id}')">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveContact('${data.id||''}')">Save contact</button>
+    </div>`;
+}
+function saveContact(existingId){
+  const name=document.getElementById('f-cname').value.trim();if(!name){toast('Please enter a name.');return;}
+  const type=document.getElementById('f-ctype').value,company=document.getElementById('f-cco').value.trim(),role=document.getElementById('f-crole').value.trim(),phone=document.getElementById('f-cphone').value.trim(),email=document.getElementById('f-cemail').value.trim(),lastContact=document.getElementById('f-clast').value,followUpDate=document.getElementById('f-cfu').value,followUpNote=document.getElementById('f-cfunote').value.trim(),linkedDeals=Array.from(document.getElementById('f-cdeals').selectedOptions).map(o=>o.value),ini=initials(name);
+  if(existingId){const c=STATE.contacts.find(x=>x.id===existingId);if(c)Object.assign(c,{name,type,company,role,phone,email,lastContact,followUpDate,followUpNote,linkedDeals,ini});}
+  else STATE.contacts.push({id:uid(),name,type,company,role,phone,email,lastContact,followUpDate,followUpNote,linkedDeals,ini,log:[]});
+  saveState();closeModal();renderContacts();renderFollowups();renderKPIs();toast(existingId?'Contact updated.':'Contact added.');
+}
+function deleteContactById(id){if(!confirm('Delete contact?'))return;STATE.contacts=STATE.contacts.filter(x=>x.id!==id);STATE.selectedContact=STATE.contacts[0]?.id||'';saveState();closeModal();renderContacts();renderFollowups();renderKPIs();toast('Contact deleted.');}
+
+// Project modal
+function projectModalHTML(data={}){
+  return`<div class="modal-h"><h3>${data.id?'Edit project':'New project'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="form-row"><label>Project name</label><input id="f-pname" type="text" value="${data.name||''}" placeholder="e.g. Rock Hill Distribution Center"/></div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Type</label><select id="f-ptype"><option value="dev" ${data.type==='dev'||!data.type?'selected':''}>Development</option><option value="brok" ${data.type==='brok'?'selected':''}>Brokerage</option></select></div>
+        <div class="form-row" style="margin:0"><label>Location</label><input id="f-ploc" type="text" value="${data.location||''}" placeholder="e.g. York County, SC"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Current phase</label><input id="f-pphase" type="text" value="${data.phase||''}" placeholder="e.g. Entitlements"/></div>
+        <div class="form-row" style="margin:0"><label>Next milestone</label><input id="f-pmilestone" type="text" value="${data.nextMilestone||''}" placeholder="e.g. permits"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Progress (0&ndash;100%)</label><input id="f-pprogress" type="number" min="0" max="100" value="${data.progress||0}"/></div>
+        <div class="form-row" style="margin:0"><label>Total budget ($)</label><input id="f-pbudget" type="number" value="${data.budget||''}" placeholder="5000000"/></div>
+      </div>
+      <div class="form-row"><label>Notes</label><textarea id="f-pnotes" rows="3" style="resize:vertical" placeholder="Brief description&hellip;">${data.notes||''}</textarea></div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteProject('${data.id}');closeModal()">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveProject('${data.id||''}')">Save project</button>
+    </div>`;
+}
+function saveProject(existingId){
+  const name=document.getElementById('f-pname').value.trim();if(!name){toast('Please enter a project name.');return;}
+  const type=document.getElementById('f-ptype').value,location=document.getElementById('f-ploc').value.trim(),phase=document.getElementById('f-pphase').value.trim(),nextMilestone=document.getElementById('f-pmilestone').value.trim(),progress=Math.min(100,Math.max(0,parseInt(document.getElementById('f-pprogress').value)||0)),budget=parseInt(document.getElementById('f-pbudget').value)||0,notes=document.getElementById('f-pnotes').value.trim();
+  if(existingId){const p=STATE.projects.find(x=>x.id===existingId);if(p)Object.assign(p,{name,type,location,phase,nextMilestone,progress,budget,notes});}
+  else STATE.projects.push({id:uid(),name,type,location,phase,nextMilestone,progress,budget,notes});
+  saveState();closeModal();renderProjects();renderDeals();toast(existingId?'Project updated.':'Project added.');
+}
+
+// Quick add
+function quickAddHTML(){
+  return`<div class="modal-h"><h3>Quick add</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b" style="display:grid;grid-template-columns:1fr 1fr;gap:12px;text-align:center;">
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('task',{day:'${todayStr()}'})"><div style="font-size:28px;margin-bottom:8px;">&#128203;</div><div style="font-weight:600;font-size:14px;">Task</div><div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to this week</div></div>
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('deal',{})"><div style="font-size:28px;margin-bottom:8px;">&#127970;</div><div style="font-weight:600;font-size:14px;">Deal</div><div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to pipeline</div></div>
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('contact',{})"><div style="font-size:28px;margin-bottom:8px;">&#128100;</div><div style="font-weight:600;font-size:14px;">Contact</div><div style="font-size:12px;color:var(--ink-3);margin-top:4px;">Add to CRM</div></div>
+      <div class="panel" style="padding:24px;cursor:pointer;" onclick="closeModal();openModal('project',{})"><div style="font-size:28px;margin-bottom:8px;">&#128193;</div><div style="font-weight:600;font-size:14px;">Project</div><div style="font-size:12px;color:var(--ink-3);margin-top:4px;">New long-term project</div></div>
+    </div>
+    <div class="modal-footer"><button class="btn" onclick="closeModal()">Cancel</button></div>`;
+}
+
+// Data
+function exportData(){const blob=new Blob([JSON.stringify(STATE,null,2)],{type:'application/json'}),a=document.createElement('a');a.href=URL.createObjectURL(blob);a.download=`cre-hq-backup-${todayStr()}.json`;a.click();toast('Backup exported.');}
+function resetData(){if(!confirm('Reset all data to sample state? This cannot be undone.'))return;localStorage.removeItem(STORE_KEY);STATE=defaultState();saveState();init();toast('Data reset to sample.');}
+
+// FRED rates
+const FRED_KEY='abcdefghijklmnopqrstuvwxyz123456';
+async function fetchFredSeries(sid){const res=await fetch(`https://api.stlouisfed.org/fred/series/observations?series_id=${sid}&api_key=${FRED_KEY}&sort_order=desc&limit=5&file_type=json`),data=await res.json(),obs=(data.observations||[]).filter(o=>o.value!=='.');if(obs.length<2)return null;return{current:parseFloat(obs[0].value),prev:parseFloat(obs[1].value)};}
+async function fetchRates(){
+  document.getElementById('ratesDate').textContent=`Updated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
+  if(FRED_KEY==='YOUR_FRED_KEY_HERE')return;
+  try{
+    const[sofr,dgs10]=await Promise.all([fetchFredSeries('SOFR'),fetchFredSeries('DGS10')]);
+    if(sofr){const chg=(sofr.current-sofr.prev).toFixed(2),dir=chg>=0?'up':'down',arrow=chg>=0?'&#9650;':'&#9660;';document.getElementById('rate-sofr').innerHTML=`${sofr.current.toFixed(2)}<span style="font-size:13px">%</span>`;document.getElementById('rate-sofr-chg').className=`chg ${dir}`;document.getElementById('rate-sofr-chg').innerHTML=`${arrow} ${Math.abs(chg)}`;document.getElementById('t-sofr').textContent=sofr.current.toFixed(2);document.getElementById('t-sofr-chg').className=`c ${dir}`;document.getElementById('t-sofr-chg').innerHTML=`${arrow}${Math.abs(chg)}`;}
+    if(dgs10){const chg=(dgs10.current-dgs10.prev).toFixed(2),dir=chg>=0?'up':'down',arrow=chg>=0?'&#9650;':'&#9660;';document.getElementById('rate-10y').innerHTML=`${dgs10.current.toFixed(2)}<span style="font-size:13px">%</span>`;document.getElementById('rate-10y-chg').className=`chg ${dir}`;document.getElementById('rate-10y-chg').innerHTML=`${arrow} ${Math.abs(chg)}`;document.getElementById('t-10y').textContent=dgs10.current.toFixed(2);document.getElementById('t-10y-chg').className=`c ${dir}`;document.getElementById('t-10y-chg').innerHTML=`${arrow}${Math.abs(chg)}`;}
+    document.getElementById('ratesDate').textContent=`Live \u00b7 ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
+  }catch(e){console.log('Rates fetch failed');}
+}
+
+
+// ============================================================
+// OUTLOOK CALENDAR — MSAL.js + Microsoft Graph
+// ============================================================
+const MS_CLIENT_ID = '3047330a-e275-4c8c-9336-2f6e0c7d5081';
+const MS_TENANT_ID = '82c00f53-836a-4d08-8462-c9b76676f801';
+
+const msalConfig = {
+  auth: {
+    clientId: MS_CLIENT_ID,
+    authority: `https://login.microsoftonline.com/${MS_TENANT_ID}`,
+    redirectUri: window.location.href.split('?')[0].split('#')[0],
+  },
+  cache: { cacheLocation: 'localStorage', storeAuthStateInCookie: false },
+};
+
+let msalInstance = null;
+let calAccount = null;
+let CAL_EVENTS = {};
+
+function getMsalInstance() {
+  if (!msalInstance) msalInstance = new msal.PublicClientApplication(msalConfig);
+  return msalInstance;
+}
+
+async function getCalToken() {
+  // Local file mode — use pasted token from localStorage
+  if (isLocalFile()) {
+    return localStorage.getItem('cre_ms_token') || null;
+  }
+  // HTTP mode — use MSAL silent token
+  try {
+    const app = getMsalInstance();
+    const accounts = app.getAllAccounts();
+    if (accounts.length === 0) return null;
+    calAccount = accounts[0];
+    const result = await app.acquireTokenSilent({
+      scopes: ['Calendars.Read'],
+      account: calAccount,
+    });
+    return result.accessToken;
+  } catch (e) {
+    return null;
+  }
+}
+
+function isLocalFile() {
+  return window.location.protocol === 'file:';
+}
+
+async function toggleOutlookAuth() {
+  // If running as a local file, MSAL popup won't work — show token paste modal instead
+  if (isLocalFile()) {
+    showTokenModal();
+    return;
+  }
+  // Running from http(s):// — use MSAL popup
+  const app = getMsalInstance();
+  const accounts = app.getAllAccounts();
+  if (accounts.length > 0) {
+    await app.logoutPopup({ account: accounts[0] });
+    calAccount = null;
+    CAL_EVENTS = {};
+    renderWeekWithCal();
+    updateCalBtn(false);
+    toast('Outlook disconnected.');
+    return;
+  }
+  try {
+    updateCalBtn(null);
+    const result = await app.loginPopup({ scopes: ['Calendars.Read'] });
+    calAccount = result.account;
+    updateCalBtn(true);
+    toast('Outlook connected — loading calendar…');
+    await fetchCalendarWeek();
+  } catch (e) {
+    console.warn('MSAL login error', e);
+    updateCalBtn(false);
+    toast('Outlook sign-in cancelled.');
+  }
+}
+
+function showTokenModal() {
+  const stored = localStorage.getItem('cre_ms_token') || '';
+  const backdrop = document.getElementById('modalBackdrop');
+  const box = document.getElementById('modalBox');
+  backdrop.style.display = 'flex';
+  box.innerHTML = `
+    <div class="modal-h">
+      <h3>&#128197; Connect Outlook Calendar</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-b">
+      <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:16px;line-height:1.6;">
+        To pull your Outlook calendar, paste a Microsoft Graph access token below.
+        Tokens are valid for ~1 hour. Here's how to get one in 30 seconds:
+      </p>
+      <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;font-size:13px;line-height:1.7;margin-bottom:16px;">
+        1. Open <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" style="color:var(--brok)">Graph Explorer</a> in a new tab<br>
+        2. Sign in with <strong>jhill@warrennorman.com</strong><br>
+        3. Click your avatar (top right) &rarr; <strong>Access token</strong> tab<br>
+        4. Copy the entire token and paste it below
+      </div>
+      <div class="form-row">
+        <label>Access Token</label>
+        <textarea id="msTokenInput" rows="4" style="resize:vertical;font-family:var(--mono);font-size:11px;" placeholder="eyJ0eXAiOiJKV1QiLCJub...">${stored}</textarea>
+      </div>
+      <p style="font-size:11.5px;color:var(--ink-3);">Token is stored locally in your browser. You'll need to refresh it when it expires (~1 hour).</p>
+    </div>
+    <div class="modal-footer">
+      ${stored ? '<button class="btn danger" onclick="disconnectOutlook()">Disconnect</button>' : ''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveOutlookToken()">Connect &amp; Load Calendar</button>
+    </div>`;
+}
+
+function saveOutlookToken() {
+  const token = document.getElementById('msTokenInput')?.value?.trim();
+  if (!token || token.length < 50) { toast('Please paste a valid access token.'); return; }
+  localStorage.setItem('cre_ms_token', token);
+  closeModal();
+  updateCalBtn(true, 'Outlook');
+  toast('Outlook connected — loading calendar…');
+  fetchCalendarWeek();
+}
+
+function disconnectOutlook() {
+  localStorage.removeItem('cre_ms_token');
+  CAL_EVENTS = {};
+  renderWeekWithCal();
+  closeModal();
+  updateCalBtn(false);
+  toast('Outlook disconnected.');
+}
+
+function updateCalBtn(connected, name) {
+  const btn = document.getElementById('calBtn');
+  const icon = document.getElementById('calBtnIcon');
+  const label = document.getElementById('calBtnLabel');
+  if (!btn) return;
+  if (connected === null) {
+    label.textContent = 'Connecting…';
+    btn.style.opacity = '0.6';
+  } else if (connected) {
+    icon.textContent = '✅';
+    label.textContent = name || calAccount?.name?.split(' ')[0] || 'Outlook';
+    btn.style.opacity = '1';
+    btn.style.background = 'var(--good-soft)';
+    btn.style.borderColor = 'var(--good)';
+    btn.style.color = 'var(--good)';
+  } else {
+    icon.innerHTML = '&#128197;';
+    label.textContent = 'Connect Outlook';
+    btn.style.opacity = '1';
+    btn.style.background = '';
+    btn.style.borderColor = '';
+    btn.style.color = '';
+  }
+}
+
+async function initMsal() {
+  // Local file mode — check for stored token
+  if (isLocalFile()) {
+    const stored = localStorage.getItem('cre_ms_token');
+    if (stored) {
+      updateCalBtn(true, 'Outlook');
+      fetchCalendarWeek();
+    }
+    return;
+  }
+  // HTTP mode — initialize MSAL
+  try {
+    const app = getMsalInstance();
+    await app.handleRedirectPromise();
+    const accounts = app.getAllAccounts();
+    if (accounts.length > 0) {
+      calAccount = accounts[0];
+      updateCalBtn(true);
+      fetchCalendarWeek();
+    }
+  } catch (e) {
+    console.warn('MSAL init error', e);
+  }
+}
+
+async function fetchCalendarWeek() {
+  const token = await getCalToken();
+  if (!token) return;
+  try {
+    const mon = currentWeekMonday();
+    const start = new Date(mon);
+    const end = new Date(mon); end.setDate(end.getDate() + 5);
+    // Graph needs local time ISO — use UTC
+    const url = `https://graph.microsoft.com/v1.0/me/calendarView?startDateTime=${start.toISOString()}&endDateTime=${end.toISOString()}&$select=subject,start,end,isAllDay,location&$orderby=start/dateTime&$top=100`;
+    const res = await fetch(url, { headers: { Authorization: `Bearer ${token}` } });
+    if (!res.ok) { console.warn('Calendar fetch failed:', res.status); return; }
+    const data = await res.json();
+    CAL_EVENTS = {};
+    (data.value || []).forEach(ev => {
+      // Convert event start to local date string
+      let ds;
+      if (ev.isAllDay) {
+        ds = ev.start.dateTime.slice(0, 10);
+      } else {
+        // Graph returns UTC ISO — convert to local date
+        ds = new Date(ev.start.dateTime + (ev.start.dateTime.endsWith('Z') ? '' : 'Z')).toLocaleDateString('en-CA');
+      }
+      if (!CAL_EVENTS[ds]) CAL_EVENTS[ds] = [];
+      CAL_EVENTS[ds].push(ev);
+    });
+    renderWeekWithCal();
+  } catch (e) { console.warn('Calendar error', e); }
+}
+
+function fmtCalTime(iso, isAllDay) {
+  if (isAllDay) return 'All day';
+  const suffix = iso.endsWith('Z') ? '' : 'Z';
+  const d = new Date(iso + suffix);
+  return d.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+}
+
+function calEventsHtml(ds) {
+  const evs = CAL_EVENTS[ds];
+  if (!evs || !evs.length) return '';
+  const sorted = [...evs].sort((a, b) => {
+    if (a.isAllDay && !b.isAllDay) return -1;
+    if (!a.isAllDay && b.isAllDay) return 1;
+    return new Date(a.start.dateTime) - new Date(b.start.dateTime);
+  });
+  const evHtml = sorted.map(ev => {
+    const timeStr = fmtCalTime(ev.start.dateTime, ev.isAllDay);
+    const endStr = ev.isAllDay ? '' : ` – ${fmtCalTime(ev.end.dateTime, false)}`;
+    const loc = ev.location?.displayName ? `<span style="font-size:10px;color:var(--ink-3);margin-top:1px;display:block;">&#128205; ${ev.location.displayName.slice(0, 35)}</span>` : '';
+    return `<div class="cal-event ${ev.isAllDay ? 'all-day' : ''}"><div class="ce-time">&#128337; ${timeStr}${endStr}</div><div class="ce-title">${ev.subject || '(No title)'}</div>${loc}</div>`;
+  }).join('');
+  return `<div class="cal-divider">Outlook</div>${evHtml}`;
+}
+
+function renderWeekWithCal() {
+  const mon = currentWeekMonday();
+  for (let i = 0; i < 5; i++) {
+    const d = new Date(mon); d.setDate(d.getDate() + i);
+    const ds = fmt(d);
+    const dayBody = document.getElementById('day-' + ds);
+    if (!dayBody) continue;
+    dayBody.querySelectorAll('.cal-event,.cal-divider').forEach(el => el.remove());
+    const addBtn = dayBody.querySelector('.addt');
+    const calHtml = calEventsHtml(ds);
+    if (calHtml && addBtn) {
+      const tmp = document.createElement('div'); tmp.innerHTML = calHtml;
+      while (tmp.firstChild) dayBody.insertBefore(tmp.firstChild, addBtn);
+    }
+  }
+}
+
+// Init
+function init(){
+  applyTheme();showTab(STATE.activeTab||'home');
+  fetchNews();renderWeek();renderKPIs();renderProjects();renderFollowups();
+  document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
+  document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
+  renderDeals();renderContacts();renderMap();fetchRates();initMsal();
+  document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
+  document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
+  document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
+  document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev!==false);
+  // Pull latest from Supabase and subscribe to real-time updates
+  pullFromSupabase();
+  subscribeToSupabase();
+}
+if(checkAuth()){document.getElementById('loginScreen').style.display='none';document.getElementById('appShell').style.display='block';init();}
+else setTimeout(()=>document.getElementById('loginUser')?.focus(),100);
+document.addEventListener('DOMContentLoaded',()=>{const u=document.getElementById('loginUser');if(u)u.addEventListener('keydown',e=>{if(e.key==='Enter')document.getElementById('loginPass').focus();});});
+</script>
+</body>
+</html>
