@@ -7,7 +7,7 @@
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
-<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js"></script>
+<script src="https://alcdn.msauth.net/browser/2.38.3/js/msal-browser.min.js" onerror="msalLoadFailed=true"></script>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
 :root {
@@ -1184,21 +1184,35 @@ async function toggleOutlookAuth() {
     showTokenModal();
     return;
   }
-  // Running from http(s):// — use MSAL popup
-  const app = getMsalInstance();
-  const accounts = app.getAllAccounts();
-  if (accounts.length > 0) {
-    await app.logoutPopup({ account: accounts[0] });
-    calAccount = null;
-    CAL_EVENTS = {};
-    renderWeekWithCal();
-    updateCalBtn(false);
-    toast('Outlook disconnected.');
+  // Check if MSAL loaded
+  if (typeof msal === 'undefined' || window.msalLoadFailed) {
+    toast('Auth library blocked — using token method instead.');
+    showTokenModal();
     return;
   }
+  // Running from http(s):// — use MSAL popup
   try {
+    const app = getMsalInstance();
+    const accounts = app.getAllAccounts();
+    if (accounts.length > 0) {
+      await app.logoutPopup({ account: accounts[0] });
+      calAccount = null;
+      CAL_EVENTS = {};
+      renderWeekWithCal();
+      updateCalBtn(false);
+      toast('Outlook disconnected.');
+      return;
+    }
     updateCalBtn(null);
-    const result = await app.loginPopup({ scopes: ['Calendars.Read'] });
+    // Test if popups are allowed first
+    const testPopup = window.open('', '_blank', 'width=1,height=1');
+    if (!testPopup || testPopup.closed) {
+      updateCalBtn(false);
+      toast('Allow popups for this site then try again.');
+      return;
+    }
+    testPopup.close();
+    const result = await app.loginPopup({ scopes: ['Calendars.Read', 'User.Read'] });
     calAccount = result.account;
     updateCalBtn(true);
     toast('Outlook connected — loading calendar…');
@@ -1206,7 +1220,11 @@ async function toggleOutlookAuth() {
   } catch (e) {
     console.warn('MSAL login error', e);
     updateCalBtn(false);
-    toast('Outlook sign-in cancelled.');
+    if (e.message && e.message.includes('popup')) {
+      toast('Popup blocked — allow popups for this site and try again.');
+    } else {
+      toast('Sign-in failed: ' + (e.message||'unknown error'));
+    }
   }
 }
 
