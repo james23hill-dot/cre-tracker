@@ -346,6 +346,51 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 .lease-modal-header span{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;}
 .lease-add-row{border:1px dashed var(--line);border-radius:var(--r-sm);padding:8px;text-align:center;color:var(--ink-3);font-size:12.5px;cursor:pointer;margin-top:4px;}
 .lease-add-row:hover{border-color:var(--ink-3);color:var(--ink);}
+
+/* TENANTS TAB */
+.tenant-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(340px,1fr));gap:var(--gut);align-items:start;}
+.tenant-card{background:var(--surface);border:1px solid var(--line);border-top:3px solid var(--ink-3);border-radius:var(--r);box-shadow:var(--sh);overflow:hidden;}
+.tenant-card.food{border-top-color:#e05c2a;}
+.tenant-card.medical{border-top-color:#4fa3c8;}
+.tenant-card.education{border-top-color:#7c5cbf;}
+.tenant-card.fitness{border-top-color:#3ba87a;}
+.tenant-card.retail{border-top-color:#c8a23a;}
+.tenant-card.service{border-top-color:#888;}
+.tenant-card-h{padding:12px 14px 8px;display:flex;align-items:flex-start;justify-content:space-between;gap:8px;}
+.tenant-card-h .tname{font-size:15px;font-weight:600;}
+.tenant-card-h .tcat{font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;white-space:nowrap;}
+.tcat-food{background:#fde8de;color:#c04000;}
+.tcat-medical{background:#ddeef7;color:#2a6f8f;}
+.tcat-education{background:#ebe0f7;color:#5a3a99;}
+.tcat-fitness{background:#d9f5e8;color:#1d7a52;}
+.tcat-retail{background:#fdf3d9;color:#8a6200;}
+.tcat-service{background:var(--surface-3);color:var(--ink-3);}
+html[data-theme="dark"] .tcat-food{background:#3d1a08;color:#f0855a;}
+html[data-theme="dark"] .tcat-medical{background:#0d2f3d;color:#6abcda;}
+html[data-theme="dark"] .tcat-education{background:#2a1a40;color:#b08ae8;}
+html[data-theme="dark"] .tcat-fitness{background:#0d2e1f;color:#5acf95;}
+html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
+.tenant-sf{display:flex;gap:10px;padding:4px 14px 8px;font-size:12.5px;color:var(--ink-2);}
+.tenant-sf .sf-val{font-family:var(--mono);font-weight:600;color:var(--ink);}
+.tenant-reqs{padding:0 14px 10px;font-size:12px;color:var(--ink-2);line-height:1.5;border-bottom:1px solid var(--line-2);}
+.tenant-icons{display:flex;gap:10px;padding:8px 14px;font-size:11.5px;color:var(--ink-3);}
+.tenant-icons .ti{display:flex;align-items:center;gap:4px;}
+.tenant-icons .ti.on{color:var(--good);}
+.tenant-contact{padding:10px 14px;border-top:1px solid var(--line-2);}
+.tenant-contact .tc-name{font-size:13px;font-weight:600;}
+.tenant-contact .tc-role{font-size:11.5px;color:var(--ink-3);}
+.tenant-contact .tc-info{display:flex;gap:12px;margin-top:5px;font-size:12px;flex-wrap:wrap;}
+.tenant-contact .tc-info a{color:var(--brok);}
+.tenant-status{display:inline-flex;align-items:center;gap:5px;font-size:11px;font-weight:600;padding:2px 9px;border-radius:99px;}
+.ts-active{background:var(--good-soft);color:var(--good);}
+.ts-hot{background:var(--danger-soft);color:var(--danger);}
+.ts-followup{background:var(--dev-soft);color:var(--dev);}
+.ts-partner{background:var(--brok-soft);color:var(--brok);}
+.ts-pending{background:var(--surface-3);color:var(--ink-3);}
+.tenant-outreach{padding:8px 14px 12px;border-top:1px solid var(--line-2);}
+.tenant-outreach .to-stage{font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px;}
+.tenant-outreach textarea{font-size:12px;height:52px;resize:none;}
+.tenant-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
 </style>
 </head>
 <body>
@@ -389,6 +434,7 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
   <button role="tab" data-tab="contacts" aria-selected="false">Contacts <span class="count" id="tab-contacts-count">0</span></button>
   <button role="tab" data-tab="projects" aria-selected="false">Projects <span class="count" id="tab-projects-count">0</span></button>
   <button role="tab" data-tab="map" aria-selected="false">Deals Map <span class="count" id="tab-map-count">0</span></button>
+  <button role="tab" data-tab="tenants" aria-selected="false">Tenants <span class="count" id="tab-tenants-count">22</span></button>
 </nav>
 
 <div class="wrap">
@@ -495,6 +541,24 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
   <div class="legend"><span class="li"><span class="sw" style="background:var(--brok)"></span> Brokerage</span><span class="li"><span class="sw" style="background:var(--dev)"></span> Development</span><span class="li faint" style="font-size:12px;">Click a pin or row to sync.</span></div>
 </section>
 
+<!-- TENANTS -->
+<section class="screen" id="tab-tenants">
+  <div class="tenant-filter-bar">
+    <h3 style="font-size:16px;margin-right:6px">Tenant Prospects</h3>
+    <button class="chip nofill on" data-tcat="all" onclick="setTenantCat('all')">All</button>
+    <button class="chip" data-tcat="Food & Beverage" onclick="setTenantCat('Food & Beverage')" style="border-color:#e05c2a;color:#c04000">Food &amp; Bev</button>
+    <button class="chip" data-tcat="Medical / Dental" onclick="setTenantCat('Medical / Dental')" style="border-color:#4fa3c8;color:#2a6f8f">Medical</button>
+    <button class="chip" data-tcat="Education" onclick="setTenantCat('Education')" style="border-color:#7c5cbf;color:#5a3a99">Education</button>
+    <button class="chip" data-tcat="Fitness" onclick="setTenantCat('Fitness')" style="border-color:#3ba87a;color:#1d7a52">Fitness</button>
+    <button class="chip" data-tcat="Retail" onclick="setTenantCat('Retail')" style="border-color:#c8a23a;color:#8a6200">Retail</button>
+    <button class="chip" data-tcat="Service / Gas" onclick="setTenantCat('Service / Gas')" style="border-color:#888;color:var(--ink-3)">Service</button>
+    <div class="spacer" style="flex:1"></div>
+    <input type="text" id="tenantSearch" placeholder="Search tenants&hellip;" style="width:200px;" oninput="renderTenants()"/>
+    <button class="btn sm primary" onclick="openModal('tenant',{})">+ Add tenant</button>
+  </div>
+  <div class="tenant-grid" id="tenantGrid"></div>
+</section>
+
 </div><!-- /wrap -->
 <div class="toast" id="toast"></div>
 
@@ -563,6 +627,30 @@ function defaultState(){
       {id:'p1',name:'Columbia Mixed-Use',type:'dev',phase:'Entitlements',nextMilestone:'draw #3',progress:42,location:'Columbia, SC',budget:8500000,notes:'Mixed-use infill redevelopment.'},
       {id:'p2',name:'Greenville Ind. Park',type:'dev',phase:'Site work',nextMilestone:'permits',progress:64,location:'Greenville, SC',budget:12000000,notes:'Industrial park phase 1 along I-85.'},
       {id:'p3',name:'Wilmington Waterfront',type:'dev',phase:'Pre-development',nextMilestone:'zoning',progress:18,location:'Wilmington, NC',budget:5200000,notes:'Waterfront land assemblage.'},
+    ],
+    tenants:[
+      {id:'ten1',name:'Little Caesars',category:'Food & Beverage',subcat:'QSR',sfMin:1200,sfMax:1400,endCap:true,driveThru:true,parking:'Dedicated',requirements:'Inline/end cap/freestanding. 20ft min frontage. Near drug/dollar/grocery. <160ft from road. 15K+ pop trade area.',contact:'Otis Carter',contactTitle:'Franchise RE – Southeast',phone:'734-255-6031',email:'Otis.Carter@LCEcorp.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten2',name:'Jollibee',category:'Food & Beverage',subcat:'QSR',sfMin:1900,sfMax:2500,endCap:true,driveThru:true,parking:'Ample',requirements:'25K+ ADT. Drive-thru preferred. Near big-box/hospital/college. High visibility corner.',contact:'Franchise Sales Team',contactTitle:'Franchise Sales & Development',phone:'',email:'support@franchising.jollibeefoods.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten3',name:'Qdoba Mexican Eats',category:'Food & Beverage',subcat:'Fast Casual',sfMin:1800,sfMax:2500,endCap:true,driveThru:true,parking:'20+ spaces',requirements:'25K+ VPD. Patio 12+ seats preferred. 25ft frontage. Pickup window preferred. Near universities/retail.',contact:'Site Submission',contactTitle:'Submit via website',phone:'',email:'qdoba.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten4',name:'Taco Bell',category:'Food & Beverage',subcat:'QSR',sfMin:1000,sfMax:2500,endCap:true,driveThru:true,parking:'20+',requirements:'Freestanding w/DT preferred. End cap/inline w/DT. Ground lease w/purchase option.',contact:'SE Development Team',contactTitle:'Taco Bell Equity Market Team',phone:'',email:'tacobell.com/realestate',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten5',name:'KFC',category:'Food & Beverage',subcat:'QSR',sfMin:1000,sfMax:2000,endCap:true,driveThru:true,parking:'10-30+',requirements:'Freestanding w/DT. 14K-30K SF lot. Ground lease w/purchase option. Min 18ft width.',contact:'Michael Nozzi',contactTitle:'SR Manager',phone:'714-402-5196',email:'michael.nozzi@yum.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten6',name:'Pizza Hut',category:'Food & Beverage',subcat:'QSR',sfMin:1120,sfMax:2400,endCap:true,driveThru:true,parking:'30-50+',requirements:'Lighted intersection corner. Multiple access points. High visibility. Ground lease w/purchase option.',contact:'Harry Houseman',contactTitle:'Development Support',phone:'',email:'harry.houseman@yum.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten7',name:"Zaxby's",category:'Food & Beverage',subcat:'Fast Casual',sfMin:0,sfMax:0,endCap:true,driveThru:true,parking:'Ample',requirements:'0.65-1 acre. Restaurant row/corner lots/SC pads. Must allow DT window & adequate signage.',contact:'Russ Holland',contactTitle:'Interim Chief Dev Officer',phone:'',email:'realestate@zaxbys.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten8',name:'Jack in the Box',category:'Food & Beverage',subcat:'QSR',sfMin:1350,sfMax:2400,endCap:true,driveThru:true,parking:'25-30',requirements:'Hard corner/major intersection. Min 8-car DT stack. Max visibility all directions. 25K+ SF lot.',contact:'Site Submission',contactTitle:'Via QR Code',phone:'',email:'realestate.jackinthebox.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten9',name:"Wendy's",category:'Food & Beverage',subcat:'QSR',sfMin:0,sfMax:0,endCap:false,driveThru:true,parking:'',requirements:'Contact for site requirements.',contact:'Ashley Sporting',contactTitle:"The Wendy's Company",phone:'',email:'ashley.sporting@wendys.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten10',name:"Papa John's",category:'Food & Beverage',subcat:'QSR',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'',requirements:'Contact for site requirements.',contact:'Brittany Ingram McDanage',contactTitle:'Real Estate',phone:'',email:'brittany.mcdanage@papajohns.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten11',name:'Dairy Queen',category:'Food & Beverage',subcat:'QSR',sfMin:0,sfMax:0,endCap:false,driveThru:true,parking:'',requirements:'Contact for site requirements.',contact:'DQ RE Team',contactTitle:'American Dairy Queen Corp',phone:'952-830-xxxx',email:'confirm@dq.com',status:'Needs Follow-up',outreachStage:'Not Started',notes:'',priority:'Follow-up needed'},
+      {id:'ten12',name:'Chick-fil-A',category:'Food & Beverage',subcat:'QSR',sfMin:0,sfMax:0,endCap:false,driveThru:true,parking:'',requirements:'Contact for site requirements.',contact:'Chris Reese',contactTitle:'Real Estate',phone:'770-424-6521',email:'creese@cfa.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten13',name:'Heartland Dental',category:'Medical / Dental',subcat:'Medical',sfMin:3000,sfMax:4500,endCap:true,driveThru:false,parking:'7/1K SF',requirements:'No inline. Hard corner, 0.5-2 acres. Grocery anchored. Fee simple only — no ground leases. Suburban growth markets.',contact:'Patrick Martelli',contactTitle:'RE Manager – Southeast',phone:'',email:'PMartelli@Heartland.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten14',name:'Children of America',category:'Education',subcat:'Education',sfMin:8500,sfMax:10000,endCap:true,driveThru:false,parking:'30 spaces',requirements:'1.5 acre lot. 5K SF outdoor play area. 15K VPD min. Median income $85K+. SC targeted 2025-26.',contact:'Robin E. Lambro',contactTitle:'Licensed RE / WWRI',phone:'201-314-6860',email:'info@wwri.co',status:'Active',outreachStage:'Not Started',notes:'SC Targeted',priority:'Primary'},
+      {id:'ten15',name:'Gordon School',category:'Education',subcat:'Education',sfMin:8000,sfMax:14000,endCap:false,driveThru:false,parking:'',requirements:'Remodel 8K+ SF or ground up 14K+ SF. SC active market.',contact:'Confirm from flyer',contactTitle:'Real Estate Team',phone:'',email:'',status:'Needs Follow-up',outreachStage:'Not Started',notes:'Confirm contact from flyer',priority:'Follow-up needed'},
+      {id:'ten16',name:'QuikTrip',category:'Service / Gas',subcat:'Service',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'Dedicated',requirements:'1.25 acres min. Hard corner, high traffic, high visibility, commercial zoning. Full access to arterial street.',contact:'Tim Long',contactTitle:'RE Manager – SC',phone:'704-559-8013',email:'tlong@quiktrip.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten17',name:'EōS Fitness',category:'Fitness',subcat:'Fitness',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'',requirements:'Contact for site requirements.',contact:'Nick Shade',contactTitle:'VP Real Estate',phone:'',email:'nick.shade@eosfitness.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten18',name:'Woof Gang Bakery',category:'Retail',subcat:'Retail',sfMin:1000,sfMax:1500,endCap:false,driveThru:false,parking:'',requirements:'High traffic centers. National/regional co-tenancy. Middle-to-upper income demographics.',contact:'Elena Sollazzo',contactTitle:'East/Canada RE',phone:'',email:'esolla@woofgangbg.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten19',name:'Savers',category:'Retail',subcat:'Retail',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'',requirements:'Thrift/value retail. Contact for site requirements.',contact:'Nathan Blackburn',contactTitle:'Real Estate',phone:'704-604-5193',email:'NBlackburn@savers.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten20',name:'GreenDrop',category:'Retail',subcat:'Retail',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'',requirements:'Donation drop-off retail concept.',contact:'Jim Ivie',contactTitle:'Real Estate Manager',phone:'404-390-4366',email:'',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten21',name:'Laynes Barber Shop',category:'Retail',subcat:'Salon',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'',requirements:'Established since 1984. Contact for site requirements.',contact:'Kordell',contactTitle:'Director of Real Estate',phone:'714-796-8897',email:'kordell@laynes.com',status:'Active',outreachStage:'Not Started',notes:'',priority:'Primary'},
+      {id:'ten22',name:'SC Power Team',category:'Service / Gas',subcat:'Partner',sfMin:0,sfMax:0,endCap:false,driveThru:false,parking:'',requirements:'SC economic development partner.',contact:'Warren A. Darby Jr.',contactTitle:'SVP Global Business',phone:'803-978-7643',email:'wdarby@scpowerteam.com',status:'Active',outreachStage:'Partner',notes:'1201 Main St Suite 1710, Columbia SC 29201',priority:'Partner'},
     ],
     news:[
       {geo:'York County',outlet:'Herald',hl:'Rock Hill industrial corridor sees record lease absorption in Q1'},
@@ -1122,7 +1210,7 @@ function selectMapDeal(id){STATE.selectedMapDeal=id;saveState();renderMap();docu
 function toggleMapFilter(btn,type){btn.dataset.on=btn.dataset.on==='true'?'false':'true';btn.classList.toggle('on',btn.dataset.on==='true');renderMap();}
 
 // Modals
-function openModal(type,data={}){const backdrop=document.getElementById('modalBackdrop'),box=document.getElementById('modalBox');backdrop.style.display='flex';if(type==='task')renderTaskModal(box,data);else if(type==='deal')renderDealModal(box,data);else if(type==='contact')box.innerHTML=contactModalHTML(data);else if(type==='project')box.innerHTML=projectModalHTML(data);else if(type==='quickadd')box.innerHTML=quickAddHTML();}
+function openModal(type,data={}){const backdrop=document.getElementById('modalBackdrop'),box=document.getElementById('modalBox');backdrop.style.display='flex';if(type==='task')renderTaskModal(box,data);else if(type==='deal')renderDealModal(box,data);else if(type==='contact')box.innerHTML=contactModalHTML(data);else if(type==='project')box.innerHTML=projectModalHTML(data);else if(type==='tenant')box.innerHTML=tenantModalHTML(data);else if(type==='quickadd')box.innerHTML=quickAddHTML();}
 function closeModal(){document.getElementById('modalBackdrop').style.display='none';}
 function openAddTask(dayStr,projId=''){openModal('task',{day:dayStr,projectId:projId});}
 function openEditDeal(id){const d=STATE.deals.find(x=>x.id===id);if(d)openModal('deal',d);}
@@ -1616,13 +1704,192 @@ function renderWeekWithCal() {
   }
 }
 
+// ============================================================
+// TENANTS TAB
+// ============================================================
+let tenantCatFilter = 'all';
+
+function setTenantCat(cat){
+  tenantCatFilter = cat;
+  document.querySelectorAll('[data-tcat]').forEach(b=>b.classList.toggle('on', b.dataset.tcat===cat));
+  renderTenants();
+}
+
+function getCatClass(cat){
+  if(cat.includes('Food')) return 'food';
+  if(cat.includes('Medical')) return 'medical';
+  if(cat.includes('Educ')) return 'education';
+  if(cat.includes('Fitness')) return 'fitness';
+  if(cat.includes('Retail')||cat.includes('Salon')) return 'retail';
+  return 'service';
+}
+
+function getCatBadgeClass(cat){
+  if(cat.includes('Food')) return 'tcat-food';
+  if(cat.includes('Medical')) return 'tcat-medical';
+  if(cat.includes('Educ')) return 'tcat-education';
+  if(cat.includes('Fitness')) return 'tcat-fitness';
+  if(cat.includes('Retail')||cat.includes('Salon')) return 'tcat-retail';
+  return 'tcat-service';
+}
+
+function getStatusClass(status){
+  if(status==='Active') return 'ts-active';
+  if(status==='Hot – SC Targeted') return 'ts-hot';
+  if(status==='Needs Follow-up') return 'ts-followup';
+  if(status==='Partner') return 'ts-partner';
+  return 'ts-pending';
+}
+
+function renderTenants(){
+  if(!STATE.tenants) STATE.tenants=[];
+  const grid=document.getElementById('tenantGrid');
+  if(!grid) return;
+  const q=(document.getElementById('tenantSearch')?.value||'').toLowerCase();
+  document.getElementById('tab-tenants-count').textContent=STATE.tenants.length;
+
+  let tenants=STATE.tenants.filter(t=>{
+    const matchCat=tenantCatFilter==='all'||t.category===tenantCatFilter;
+    const matchQ=!q||t.name.toLowerCase().includes(q)||t.category.toLowerCase().includes(q)||(t.contact||'').toLowerCase().includes(q);
+    return matchCat&&matchQ;
+  });
+
+  if(!tenants.length){grid.innerHTML='<div class="proj-empty" style="grid-column:1/-1">No tenants found.</div>';return;}
+
+  grid.innerHTML=tenants.map(t=>{
+    const catClass=getCatClass(t.category);
+    const badgeClass=getCatBadgeClass(t.category);
+    const statusClass=getStatusClass(t.status);
+    const sfStr=t.sfMin&&t.sfMax?`${t.sfMin.toLocaleString()} – ${t.sfMax.toLocaleString()} SF`:t.sfMin?`${t.sfMin.toLocaleString()}+ SF`:'Contact for SF';
+    const icons=[
+      t.endCap?'<span class="ti on" title="End cap">🔲 End Cap</span>':'',
+      t.driveThru?'<span class="ti on" title="Drive-thru">🚗 Drive-Thru</span>':'',
+      t.parking?`<span class="ti" title="Parking">🅿️ ${t.parking}</span>`:'',
+    ].filter(Boolean).join('');
+
+    const stageOpts=['Not Started','Emailed','Called','Meeting Set','Active Negotiation','Closed','Not Interested'].map(s=>`<option value="${s}" ${t.outreachStage===s?'selected':''}>${s}</option>`).join('');
+
+    return`<div class="tenant-card ${catClass}">
+      <div class="tenant-card-h">
+        <div>
+          <div class="tname">${t.name}</div>
+          <div style="display:flex;gap:6px;align-items:center;margin-top:5px;">
+            <span class="tenant-status ${statusClass}">${t.status}</span>
+            <span class="tcat ${badgeClass}">${t.subcat||t.category}</span>
+          </div>
+        </div>
+        <div style="display:flex;gap:6px;">
+          <button class="btn sm" onclick="openModal('tenant',STATE.tenants.find(x=>x.id==='${t.id}'))">Edit</button>
+          <button class="btn sm danger" onclick="deleteTenant('${t.id}')">✕</button>
+        </div>
+      </div>
+      <div class="tenant-sf"><span style="color:var(--ink-3)">SF:</span><span class="sf-val">${sfStr}</span></div>
+      ${icons?`<div class="tenant-icons">${icons}</div>`:''}
+      ${t.requirements?`<div class="tenant-reqs">${t.requirements.slice(0,120)}${t.requirements.length>120?'…':''}</div>`:''}
+      <div class="tenant-contact">
+        <div class="tc-name">${t.contact||'—'}</div>
+        <div class="tc-role">${t.contactTitle||''}</div>
+        <div class="tc-info">
+          ${t.phone?`<span>📞 ${t.phone}</span>`:''}
+          ${t.email&&t.email.includes('@')?`<a href="mailto:${t.email}">✉️ ${t.email}</a>`:''}
+        </div>
+      </div>
+      <div class="tenant-outreach">
+        <div class="to-stage">Outreach: 
+          <select style="display:inline-block;width:auto;height:24px;font-size:11.5px;padding:2px 6px;margin-left:6px;" onchange="updateTenantStage('${t.id}',this.value)">${stageOpts}</select>
+        </div>
+        <textarea placeholder="Notes on this tenant…" style="width:100%;margin-top:6px;" onblur="updateTenantNotes('${t.id}',this.value)">${t.notes||''}</textarea>
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function updateTenantStage(id,val){
+  const t=STATE.tenants.find(x=>x.id===id);
+  if(t){t.outreachStage=val;saveState();}
+}
+function updateTenantNotes(id,val){
+  const t=STATE.tenants.find(x=>x.id===id);
+  if(t){t.notes=val;saveState();toast('Notes saved.');}
+}
+function deleteTenant(id){
+  if(!confirm('Delete this tenant?')) return;
+  STATE.tenants=STATE.tenants.filter(x=>x.id!==id);
+  saveState();renderTenants();toast('Tenant deleted.');
+}
+
+function tenantModalHTML(data={}){
+  const catOpts=['Food & Beverage','Medical / Dental','Education','Fitness','Retail','Service / Gas','Other'].map(c=>`<option value="${c}" ${data.category===c?'selected':''}>${c}</option>`).join('');
+  const statusOpts=['Active','Needs Follow-up','Hot – SC Targeted','Partner','Inactive'].map(s=>`<option value="${s}" ${data.status===s?'selected':''}>${s}</option>`).join('');
+  return`<div class="modal-h"><h3>${data.id?'Edit tenant':'Add tenant'}</h3><button class="modal-close" onclick="closeModal()">&times;</button></div>
+    <div class="modal-b">
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Tenant name</label><input id="f-tname" type="text" value="${data.name||''}" placeholder="e.g. Chick-fil-A" autofocus/></div>
+        <div class="form-row" style="margin:0"><label>Category</label><select id="f-tcat">${catOpts}</select></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>SF Min</label><input id="f-tsfmin" type="number" value="${data.sfMin||''}" placeholder="1200"/></div>
+        <div class="form-row" style="margin:0"><label>SF Max</label><input id="f-tsfmax" type="number" value="${data.sfMax||''}" placeholder="2500"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>End cap?</label><select id="f-tendcap"><option value="false" ${!data.endCap?'selected':''}>No</option><option value="true" ${data.endCap?'selected':''}>Yes</option></select></div>
+        <div class="form-row" style="margin:0"><label>Drive-thru?</label><select id="f-tdt"><option value="false" ${!data.driveThru?'selected':''}>No</option><option value="true" ${data.driveThru?'selected':''}>Yes / Required</option></select></div>
+      </div>
+      <div class="form-row"><label>Site requirements</label><textarea id="f-treqs" rows="3" style="resize:vertical">${data.requirements||''}</textarea></div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Primary contact</label><input id="f-tcont" type="text" value="${data.contact||''}" placeholder="Jane Smith"/></div>
+        <div class="form-row" style="margin:0"><label>Title</label><input id="f-ttitle" type="text" value="${data.contactTitle||''}" placeholder="RE Manager"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Phone</label><input id="f-tphone" type="text" value="${data.phone||''}" placeholder="(864) 555-0100"/></div>
+        <div class="form-row" style="margin:0"><label>Email</label><input id="f-temail" type="email" value="${data.email||''}" placeholder="name@company.com"/></div>
+      </div>
+      <div class="form-row-2">
+        <div class="form-row" style="margin:0"><label>Status</label><select id="f-tstatus">${statusOpts}</select></div>
+        <div class="form-row" style="margin:0"><label>Parking</label><input id="f-tpark" type="text" value="${data.parking||''}" placeholder="20+ spaces"/></div>
+      </div>
+      <div class="form-row"><label>Notes</label><textarea id="f-tnotes" rows="2" style="resize:vertical">${data.notes||''}</textarea></div>
+    </div>
+    <div class="modal-footer">
+      ${data.id?`<button class="btn danger" onclick="deleteTenant('${data.id}');closeModal()">Delete</button>`:''}
+      <button class="btn" onclick="closeModal()">Cancel</button>
+      <button class="btn primary" onclick="saveTenant('${data.id||''}')">Save tenant</button>
+    </div>`;
+}
+
+function saveTenant(existingId){
+  const name=document.getElementById('f-tname').value.trim();
+  if(!name){toast('Please enter a tenant name.');return;}
+  const category=document.getElementById('f-tcat').value;
+  const sfMin=parseInt(document.getElementById('f-tsfmin').value)||0;
+  const sfMax=parseInt(document.getElementById('f-tsfmax').value)||0;
+  const endCap=document.getElementById('f-tendcap').value==='true';
+  const driveThru=document.getElementById('f-tdt').value==='true';
+  const requirements=document.getElementById('f-treqs').value.trim();
+  const contact=document.getElementById('f-tcont').value.trim();
+  const contactTitle=document.getElementById('f-ttitle').value.trim();
+  const phone=document.getElementById('f-tphone').value.trim();
+  const email=document.getElementById('f-temail').value.trim();
+  const status=document.getElementById('f-tstatus').value;
+  const parking=document.getElementById('f-tpark').value.trim();
+  const notes=document.getElementById('f-tnotes').value.trim();
+  if(!STATE.tenants) STATE.tenants=[];
+  if(existingId){
+    const t=STATE.tenants.find(x=>x.id===existingId);
+    if(t) Object.assign(t,{name,category,sfMin,sfMax,endCap,driveThru,requirements,contact,contactTitle,phone,email,status,parking,notes});
+  } else {
+    STATE.tenants.push({id:uid(),name,category,subcat:category,sfMin,sfMax,endCap,driveThru,requirements,contact,contactTitle,phone,email,status,parking,notes,outreachStage:'Not Started'});
+  }
+  saveState();closeModal();renderTenants();toast(existingId?'Tenant updated.':'Tenant added.');
+}
+
 // Init
 function init(){
   applyTheme();showTab(STATE.activeTab||'home');
   fetchNews();renderWeek();renderKPIs();renderProjects();renderFollowups();
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
-  renderDeals();renderContacts();renderMap();fetchRates();initMsal();
+  renderDeals();renderContacts();renderMap();renderTenants();fetchRates();initMsal();
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
   document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
   document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
