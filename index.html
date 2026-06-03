@@ -535,7 +535,7 @@ function defaultState(){
 // Supabase config
 const SUPA_URL = 'https://rohexbfobhsomlndedhp.supabase.co';
 const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJvaGV4YmZvYmhzb21sbmRlZGhwIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODA0NjkyNTIsImV4cCI6MjA5NjA0NTI1Mn0.9Ht21sl_xszVCEGhikvx-fIpmtUayr5b4jmH7Xqx5Zc';
-const supabase = window.supabase.createClient(SUPA_URL, SUPA_KEY);
+const sbClient = window.supabase.createClient(SUPA_URL, SUPA_KEY);
 let saveTimer = null;
 
 function loadState(){
@@ -555,7 +555,7 @@ function saveState(){
 async function pushToSupabase(){
   try{
     STATE._savedAt = Date.now();
-    await supabase.from('cre_state').upsert({id:'main', data: STATE, updated_at: new Date().toISOString()});
+    await sbClient.from('cre_state').upsert({id:'main', data: STATE, updated_at: new Date().toISOString()});
     // Flash sync dot
     const dot = document.getElementById('syncDot');
     if(dot){dot.style.opacity='1';setTimeout(()=>dot.style.opacity='0',1500);}
@@ -564,7 +564,7 @@ async function pushToSupabase(){
 
 async function pullFromSupabase(){
   try{
-    const {data, error} = await supabase.from('cre_state').select('data, updated_at').eq('id','main').single();
+    const {data, error} = await sbClient.from('cre_state').select('data, updated_at').eq('id','main').single();
     if(error||!data) return;
     const remote = data.data;
     if(!remote||!remote.tasks) return;
@@ -593,7 +593,7 @@ async function pullFromSupabase(){
 
 // Subscribe to real-time changes from other devices
 function subscribeToSupabase(){
-  supabase.channel('cre_state_changes')
+  sbClient.channel('cre_state_changes')
     .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cre_state'},
       payload=>{
         const remote=payload.new?.data;
