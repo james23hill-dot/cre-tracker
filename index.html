@@ -734,23 +734,29 @@ function reRenderAll(){
 
 // Subscribe to real-time changes from other devices
 function subscribeToSupabase(){
-  sbClient.channel('cre_state_changes')
-    .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cre_state'},
-      payload=>{
-        const remote=payload.new?.data;
-        if(!remote||!remote.tasks) return;
-        const remoteTs=new Date(payload.new.updated_at).getTime();
-        const localTs=STATE._savedAt||0;
-        if(remoteTs>localTs+2000){ // 2s buffer to avoid echo
-          STATE=remote;
-          STATE._savedAt=remoteTs;
-          try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
-          if(!STATE.tenants||STATE.tenants.length===0) STATE.tenants=defaultState().tenants;
-          reRenderAll();
-          toast('Synced from another device ☁️');
-        }
-      })
-    .subscribe();
+  try{
+    sbClient.channel('cre_state_changes')
+      .on('postgres_changes',{event:'UPDATE',schema:'public',table:'cre_state'},
+        payload=>{
+          try{
+            const remote=payload.new?.data;
+            if(!remote||!remote.tasks) return;
+            const remoteTs=new Date(payload.new.updated_at).getTime();
+            const localTs=STATE._savedAt||0;
+            if(remoteTs>localTs+2000){
+              STATE=remote;
+              STATE._savedAt=remoteTs;
+              try{localStorage.setItem(STORE_KEY,JSON.stringify(STATE));}catch(e){}
+              if(!STATE.tenants||STATE.tenants.length===0) STATE.tenants=defaultState().tenants;
+              reRenderAll();
+              toast('Synced from another device ☁️');
+            }
+          }catch(e){console.warn('Realtime payload error',e);}
+        })
+      .subscribe((status,err)=>{
+        if(err) console.warn('Realtime subscribe error (non-fatal):',err);
+      });
+  }catch(e){console.warn('Realtime setup failed (non-fatal):',e);}
 }
 
 // Utilities
