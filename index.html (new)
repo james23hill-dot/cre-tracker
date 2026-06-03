@@ -1179,53 +1179,17 @@ function isLocalFile() {
 }
 
 async function toggleOutlookAuth() {
-  // If running as a local file, MSAL popup won't work — show token paste modal instead
-  if (isLocalFile()) {
-    showTokenModal();
+  // Check if already connected via stored token
+  const stored = localStorage.getItem('cre_ms_token');
+  if (stored) {
+    // Already connected — clicking again disconnects
+    if (confirm('Disconnect Outlook calendar?')) {
+      disconnectOutlook();
+    }
     return;
   }
-  // Check if MSAL loaded
-  if (typeof msal === 'undefined' || window.msalLoadFailed) {
-    toast('Auth library blocked — using token method instead.');
-    showTokenModal();
-    return;
-  }
-  // Running from http(s):// — use MSAL popup
-  try {
-    const app = getMsalInstance();
-    const accounts = app.getAllAccounts();
-    if (accounts.length > 0) {
-      await app.logoutPopup({ account: accounts[0] });
-      calAccount = null;
-      CAL_EVENTS = {};
-      renderWeekWithCal();
-      updateCalBtn(false);
-      toast('Outlook disconnected.');
-      return;
-    }
-    updateCalBtn(null);
-    // Test if popups are allowed first
-    const testPopup = window.open('', '_blank', 'width=1,height=1');
-    if (!testPopup || testPopup.closed) {
-      updateCalBtn(false);
-      toast('Allow popups for this site then try again.');
-      return;
-    }
-    testPopup.close();
-    const result = await app.loginPopup({ scopes: ['Calendars.Read', 'User.Read'] });
-    calAccount = result.account;
-    updateCalBtn(true);
-    toast('Outlook connected — loading calendar…');
-    await fetchCalendarWeek();
-  } catch (e) {
-    console.warn('MSAL login error', e);
-    updateCalBtn(false);
-    if (e.message && e.message.includes('popup')) {
-      toast('Popup blocked — allow popups for this site and try again.');
-    } else {
-      toast('Sign-in failed: ' + (e.message||'unknown error'));
-    }
-  }
+  // Show token paste modal
+  showTokenModal();
 }
 
 function showTokenModal() {
@@ -1240,15 +1204,15 @@ function showTokenModal() {
     </div>
     <div class="modal-b">
       <p style="font-size:13.5px;color:var(--ink-2);margin-bottom:16px;line-height:1.6;">
-        To pull your Outlook calendar, paste a Microsoft Graph access token below.
-        Tokens are valid for ~1 hour. Here's how to get one in 30 seconds:
+        Connect your Outlook calendar in 3 steps — takes about 30 seconds:
       </p>
-      <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;font-size:13px;line-height:1.7;margin-bottom:16px;">
-        1. Open <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" style="color:var(--brok)">Graph Explorer</a> in a new tab<br>
-        2. Sign in with <strong>jhill@warrennorman.com</strong><br>
-        3. Click your avatar (top right) &rarr; <strong>Access token</strong> tab<br>
-        4. Copy the entire token and paste it below
+      <div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:14px;font-size:13px;line-height:1.8;margin-bottom:16px;">
+        <strong>Step 1:</strong> Open <a href="https://developer.microsoft.com/en-us/graph/graph-explorer" target="_blank" style="color:var(--brok);font-weight:600;">Graph Explorer &#8599;</a> in a new tab<br>
+        <strong>Step 2:</strong> Click <strong>Sign in to Graph Explorer</strong> &rarr; sign in with <strong>jhill@warrennorman.com</strong><br>
+        <strong>Step 3:</strong> Once signed in, click your <strong>profile picture</strong> (top right) &rarr; click <strong>Access token</strong> tab &rarr; click <strong>Copy</strong><br>
+        <strong>Step 4:</strong> Paste it below and click Connect
       </div>
+      <p style="font-size:12px;color:var(--ink-3);margin-bottom:12px;">&#9888; Token expires after ~1 hour. Just paste a fresh one when calendar stops loading.</p>
       <div class="form-row">
         <label>Access Token</label>
         <textarea id="msTokenInput" rows="4" style="resize:vertical;font-family:var(--mono);font-size:11px;" placeholder="eyJ0eXAiOiJKV1QiLCJub...">${stored}</textarea>
