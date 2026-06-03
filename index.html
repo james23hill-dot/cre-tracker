@@ -338,6 +338,14 @@ html[data-theme="dark"] .mapcanvas{background:radial-gradient(120% 90% at 65% 30
 .suite-row:hover .sr-actions{opacity:1;}
 .suite-row .sr-actions button{background:none;border:none;color:var(--ink-3);font-size:11px;padding:2px 4px;border-radius:4px;cursor:pointer;}
 .suite-row .sr-actions button:hover{color:var(--danger);background:var(--danger-soft);}
+
+/* LEASE TRACKER MODAL */
+.lease-modal-row{display:grid;grid-template-columns:1fr 100px 140px 36px;gap:8px;align-items:center;margin-bottom:8px;}
+.lease-modal-row input,.lease-modal-row select{margin:0;}
+.lease-modal-header{display:grid;grid-template-columns:1fr 100px 140px 36px;gap:8px;margin-bottom:6px;}
+.lease-modal-header span{font-size:11px;font-weight:600;color:var(--ink-3);text-transform:uppercase;letter-spacing:.05em;}
+.lease-add-row{border:1px dashed var(--line);border-radius:var(--r-sm);padding:8px;text-align:center;color:var(--ink-3);font-size:12.5px;cursor:pointer;margin-top:4px;}
+.lease-add-row:hover{border-color:var(--ink-3);color:var(--ink);}
 </style>
 </head>
 <body>
@@ -855,7 +863,7 @@ function renderProjectsTab(){
         </div>`).join('')
         : '<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No suites added yet.</div>';
       leaseHtml = `<div class="lease-section">
-        <div class="ls-h"><span>&#127970; Lease Tracker</span><button class="btn sm" onclick="addSuite('${p.id}')" style="font-size:11px">+ Add suite</button></div>
+        <div class="ls-h"><span>&#127970; Lease Tracker</span><button class="btn sm" onclick="openLeaseModal('${p.id}')" style="font-size:11px">&#9998; Manage suites</button></div>
         ${suites.length?`<div class="lease-bar-wrap"><div class="lb-label"><span>${leasedSF.toLocaleString()} sf leased of ${totalSF.toLocaleString()} sf total</span><span class="lb-pct">${pct}% leased</span></div><div class="lease-bar"><div class="lb-fill" style="width:${pct}%"></div></div></div>`:''}
         ${suitesHtml}
       </div>`;
@@ -923,29 +931,115 @@ function deleteWorkItem(projId,idx){
   saveState();renderProjectsTab();renderWeek();renderKPIs();toast('Work item deleted.');
 }
 // Suite / Lease Tracker
-function addSuite(projId){
-  const name=prompt('Suite or building name (e.g. "Suite 101", "Building A"):');
-  if(!name||!name.trim())return;
-  const sfStr=prompt('Square footage (numbers only, or leave blank):');
-  const sf=parseInt(sfStr)||0;
+function openLeaseModal(projId){
   const p=STATE.projects.find(x=>x.id===projId);
   if(!p)return;
   if(!p.suites)p.suites=[];
-  p.suites.push({id:uid(),name:name.trim(),sf,status:'available'});
-  saveState();renderProjectsTab();toast('Suite added.');
+  const backdrop=document.getElementById('modalBackdrop');
+  const box=document.getElementById('modalBox');
+  backdrop.style.display='flex';
+  renderLeaseModal(box,p);
 }
+
+function renderLeaseModal(box,p){
+  const rowsHtml=p.suites.map((s,i)=>`
+    <div class="lease-modal-row" id="suite-row-${i}">
+      <input type="text" value="${s.name||''}" placeholder="Suite 101" onchange="updateSuite('${p.id}',${i},'name',this.value)"/>
+      <input type="number" value="${s.sf||''}" placeholder="SF" onchange="updateSuite('${p.id}',${i},'sf',parseInt(this.value)||0)" style="text-align:right"/>
+      <div style="display:grid;grid-template-columns:1fr auto;gap:6px;align-items:center;">
+        <select onchange="updateSuite('${p.id}',${i},'status',this.value)">
+          <option value="available" ${s.status==='available'?'selected':''}>Available</option>
+          <option value="loi" ${s.status==='loi'?'selected':''}>LOI Out</option>
+          <option value="leased" ${s.status==='leased'?'selected':''}>Leased</option>
+        </select>
+      </div>
+      <button onclick="deleteSuiteRow('${p.id}',${i})" style="background:none;border:1px solid var(--line);border-radius:6px;color:var(--ink-3);width:32px;height:32px;cursor:pointer;font-size:14px;" title="Remove">&times;</button>
+    </div>
+    ${s.status!=='available'?`<div style="padding:0 0 8px 0;display:grid;grid-template-columns:1fr 1fr;gap:8px;">
+      <div><label style="font-size:10.5px;color:var(--ink-3);display:block;margin-bottom:3px;">Tenant</label><input type="text" value="${s.tenant||''}" placeholder="Tenant name" onchange="updateSuite('${p.id}',${i},'tenant',this.value)"/></div>
+      <div><label style="font-size:10.5px;color:var(--ink-3);display:block;margin-bottom:3px;">Lease expiry</label><input type="date" value="${s.leaseExpiry||''}" onchange="updateSuite('${p.id}',${i},'leaseExpiry',this.value)"/></div>
+    </div>`:''}
+  `).join('');
+
+  // Summary stats
+  const totalSF=p.suites.reduce((s,su)=>s+(su.sf||0),0);
+  const leasedSF=p.suites.filter(su=>su.status==='leased').reduce((s,su)=>s+(su.sf||0),0);
+  const loiSF=p.suites.filter(su=>su.status==='loi').reduce((s,su)=>s+(su.sf||0),0);
+  const pct=totalSF?Math.round(leasedSF/totalSF*100):0;
+
+  box.innerHTML=`
+    <div class="modal-h">
+      <h3>&#127970; Lease Tracker &mdash; ${p.name}</h3>
+      <button class="modal-close" onclick="closeModal()">&times;</button>
+    </div>
+    <div class="modal-b">
+      ${totalSF?`<div style="background:var(--surface-2);border:1px solid var(--line);border-radius:var(--r-sm);padding:12px 14px;margin-bottom:16px;display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px;text-align:center;">
+        <div><div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--good)">${pct}%</div><div style="font-size:11.5px;color:var(--ink-3)">Leased</div></div>
+        <div><div style="font-family:var(--mono);font-size:20px;font-weight:600">${totalSF.toLocaleString()}</div><div style="font-size:11.5px;color:var(--ink-3)">Total SF</div></div>
+        <div><div style="font-family:var(--mono);font-size:20px;font-weight:600;color:var(--dev)">${((totalSF-leasedSF-loiSF)||0).toLocaleString()}</div><div style="font-size:11.5px;color:var(--ink-3)">Available SF</div></div>
+      </div>`:''}
+      <div class="lease-modal-header">
+        <span>Suite / Unit</span><span>SF</span><span>Status</span><span></span>
+      </div>
+      <div id="suiteRows">${rowsHtml}</div>
+      <div class="lease-add-row" onclick="addSuiteRow('${p.id}')">+ Add suite / unit</div>
+    </div>
+    <div class="modal-footer">
+      <button class="btn" onclick="closeModal()">Close</button>
+      <button class="btn primary" onclick="saveLeaseModal('${p.id}')">Save &amp; Close</button>
+    </div>`;
+}
+
+function addSuiteRow(projId){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p)return;
+  if(!p.suites)p.suites=[];
+  p.suites.push({id:uid(),name:'',sf:0,status:'available',tenant:'',leaseExpiry:''});
+  saveState();
+  const box=document.getElementById('modalBox');
+  renderLeaseModal(box,p);
+}
+
+function updateSuite(projId,idx,field,value){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p||!p.suites[idx])return;
+  p.suites[idx][field]=value;
+  saveState();
+  // Re-render if status changed (to show/hide tenant fields)
+  if(field==='status'){
+    const box=document.getElementById('modalBox');
+    renderLeaseModal(box,p);
+  }
+}
+
+function deleteSuiteRow(projId,idx){
+  const p=STATE.projects.find(x=>x.id===projId);
+  if(!p)return;
+  p.suites.splice(idx,1);
+  saveState();
+  const box=document.getElementById('modalBox');
+  renderLeaseModal(box,p);
+}
+
+function saveLeaseModal(projId){
+  saveState();
+  closeModal();
+  renderProjectsTab();
+  toast('Lease tracker saved.');
+}
+
 function cycleSuiteStatus(projId,idx){
   const p=STATE.projects.find(x=>x.id===projId);
   if(!p||!p.suites[idx])return;
   const cycle={available:'loi',loi:'leased',leased:'available'};
   p.suites[idx].status=cycle[p.suites[idx].status]||'available';
-  saveState();renderProjectsTab();toast(`Status: ${p.suites[idx].status}`);
+  saveState();renderProjectsTab();
 }
 function deleteSuite(projId,idx){
   const p=STATE.projects.find(x=>x.id===projId);
   if(!p)return;
   p.suites.splice(idx,1);
-  saveState();renderProjectsTab();toast('Suite deleted.');
+  saveState();renderProjectsTab();
 }
 
 function toggleProjFilter(type){if(type==='brok')STATE.projFilterBrok=!(STATE.projFilterBrok!==false);else STATE.projFilterDev=!(STATE.projFilterDev!==false);saveState();document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);renderProjectsTab();}
