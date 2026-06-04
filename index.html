@@ -1469,25 +1469,8 @@ function resetData(){if(!confirm('Reset all data to sample state? This cannot be
 
 // FRED rates
 const FRED_KEY='abcdefghijklmnopqrstuvwxyz123456';
-async function fetchFredSeries(sid){
-  // Use allorigins CORS proxy for FRED API
-  const url=`https://api.stlouisfed.org/fred/series/observations?series_id=${sid}&api_key=${FRED_KEY}&sort_order=desc&limit=5&file_type=json`;
-  const proxy=`https://api.allorigins.win/raw?url=${encodeURIComponent(url)}`;
-  try{
-    const res=await fetch(proxy),data=await res.json(),obs=(data.observations||[]).filter(o=>o.value!=='.');
-    if(obs.length<2)return null;
-    return{current:parseFloat(obs[0].value),prev:parseFloat(obs[1].value)};
-  }catch(e){return null;}
-}
 async function fetchRates(){
-  document.getElementById('ratesDate').textContent=`Updated ${new Date().toLocaleDateString('en-US',{month:'short',day:'numeric'})}`;
-  if(FRED_KEY==='YOUR_FRED_KEY_HERE')return;
-  try{
-    const[sofr,dgs10]=await Promise.all([fetchFredSeries('SOFR'),fetchFredSeries('DGS10')]);
-    if(sofr){const chg=(sofr.current-sofr.prev).toFixed(2),dir=chg>=0?'up':'down',arrow=chg>=0?'&#9650;':'&#9660;';document.getElementById('rate-sofr').innerHTML=`${sofr.current.toFixed(2)}<span style="font-size:13px">%</span>`;document.getElementById('rate-sofr-chg').className=`chg ${dir}`;document.getElementById('rate-sofr-chg').innerHTML=`${arrow} ${Math.abs(chg)}`;document.getElementById('t-sofr').textContent=sofr.current.toFixed(2);document.getElementById('t-sofr-chg').className=`c ${dir}`;document.getElementById('t-sofr-chg').innerHTML=`${arrow}${Math.abs(chg)}`;}
-    if(dgs10){const chg=(dgs10.current-dgs10.prev).toFixed(2),dir=chg>=0?'up':'down',arrow=chg>=0?'&#9650;':'&#9660;';document.getElementById('rate-10y').innerHTML=`${dgs10.current.toFixed(2)}<span style="font-size:13px">%</span>`;document.getElementById('rate-10y-chg').className=`chg ${dir}`;document.getElementById('rate-10y-chg').innerHTML=`${arrow} ${Math.abs(chg)}`;document.getElementById('t-10y').textContent=dgs10.current.toFixed(2);document.getElementById('t-10y-chg').className=`c ${dir}`;document.getElementById('t-10y-chg').innerHTML=`${arrow}${Math.abs(chg)}`;}
-    document.getElementById('ratesDate').textContent=`Live \u00b7 ${new Date().toLocaleTimeString('en-US',{hour:'numeric',minute:'2-digit'})}`;
-  }catch(e){console.log('Rates fetch failed');}
+  document.getElementById('ratesDate').textContent='';
 }
 
 
