@@ -397,6 +397,12 @@ html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
 .kcol.drag-over .kb{background:color-mix(in oklab,var(--brok) 8%,var(--surface-2));border-radius:var(--r-sm);outline:2px dashed var(--brok-line);}
 .kcol.dead-col{opacity:.7;}
 .kcol.dead-col .kh .kt{color:var(--danger);}
+
+/* TASK DRAG AND DROP */
+.task.task-dragging{opacity:.35;transform:scale(.96);}
+.day.task-drag-over .dbody{background:color-mix(in oklab,var(--brok) 6%,var(--surface));outline:2px dashed var(--brok-line);border-radius:var(--r-sm);}
+.task{cursor:grab;}
+.task:active{cursor:grabbing;}
 </style>
 </head>
 <body>
@@ -810,6 +816,50 @@ function renderNewsFallback(){document.getElementById('newsPanel').innerHTML=STA
 
 // Week grid
 function currentWeekMonday(){const base=getWeekMonday(new Date());base.setDate(base.getDate()+STATE.weekOffset*7);return base;}
+// TASK DRAG AND DROP
+let draggedTaskId = null;
+
+function taskDragStart(e, taskId){
+  draggedTaskId = taskId;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{
+    const el = document.querySelector(`.task[data-tid="${taskId}"]`);
+    if(el) el.classList.add('task-dragging');
+  }, 0);
+}
+
+function taskDragEnd(e){
+  document.querySelectorAll('.task.task-dragging').forEach(el=>el.classList.remove('task-dragging'));
+  document.querySelectorAll('.day.task-drag-over').forEach(el=>el.classList.remove('task-drag-over'));
+}
+
+function taskDragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const dayBody = e.currentTarget;
+  const dayEl = dayBody.closest('.day');
+  if(dayEl && !dayEl.classList.contains('task-drag-over')) dayEl.classList.add('task-drag-over');
+}
+
+function taskDragLeave(e){
+  const dayEl = e.currentTarget.closest('.day');
+  if(dayEl) dayEl.classList.remove('task-drag-over');
+}
+
+function taskDrop(e, newDay){
+  e.preventDefault();
+  const dayEl = e.currentTarget.closest('.day');
+  if(dayEl) dayEl.classList.remove('task-drag-over');
+  if(!draggedTaskId) return;
+  const task = STATE.tasks.find(t=>t.id===draggedTaskId);
+  if(!task || task.day === newDay) return;
+  task.day = newDay;
+  draggedTaskId = null;
+  saveState();
+  renderWeek();
+  renderKPIs();
+}
+
 function renderWeek(){
   const mon=currentWeekMonday(),days=Array.from({length:5},(_,i)=>{const d=new Date(mon);d.setDate(d.getDate()+i);return d;}),todayS=todayStr(),dayNames=['Mon','Tue','Wed','Thu','Fri'];
   document.getElementById('weekDateRange').textContent=`${days[0].toLocaleDateString('en-US',{month:'short',day:'numeric'})} \u2013 ${days[4].toLocaleDateString('en-US',{month:'short',day:'numeric'})}, ${days[0].getFullYear()}`;
@@ -825,7 +875,7 @@ function renderWeek(){
       // Resolve project name from ID
       const projName=t.projectId?(STATE.projects.find(p=>p.id===t.projectId)?.name||t.projectId):'';
       const timeEl=t.time?`<span class="badge time">${t.time}</span>`:'';
-      return`<div class="task ${t.type} ${t.done?'done':''} ${over} ${hide}" data-tid="${t.id}" ondblclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'))">
+      return`<div class="task ${t.type} ${t.done?'done':''} ${over} ${hide}" data-tid="${t.id}" draggable="true" ondragstart="taskDragStart(event,'${t.id}')" ondragend="taskDragEnd(event)" ondblclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'))">
         <div class="ttop"><span class="cbx ${t.done?'on':''}" onclick="toggleTask('${t.id}',event)"></span><span class="ttl">${t.title}</span>
         <span class="task-actions">${impDots}<button onclick="openModal('task',STATE.tasks.find(x=>x.id==='${t.id}'));event.stopPropagation()" title="Edit" style="color:var(--ink-3);font-size:12px;padding:2px 4px;background:none;border:none;border-radius:4px;">&#9998;</button><button onclick="deleteTask('${t.id}',event)" title="Delete">&times;</button></span></div>
         <div class="tmeta">${projName?`<span class="tproj">${projName}</span>`:''}${cEl}${timeEl}</div>
