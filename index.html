@@ -484,6 +484,7 @@ html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
     <button class="chip dev on" id="deal-filter-dev" onclick="toggleDealFilter('dev')">Development</button>
     <div class="spacer" style="flex:1"></div>
     <span class="mono tiny muted" id="deal-summary"></span>
+    <button class="btn sm" onclick="fixBrokenDeals()" title="Fix any deals not showing">&#128295; Fix deals</button>
     <button class="btn sm primary" onclick="openModal('deal')">+ New deal</button>
   </div>
   <div class="kan" id="kanban"></div>
@@ -1123,6 +1124,23 @@ function renderFollowups(){
 // Deal tracker
 const STAGES=[{id:'prelim',label:'Prelim',prob:'10%'},{id:'loi',label:'LOI',prob:'30%'},{id:'lease-sale',label:'Lease / Sale',prob:'60%'},{id:'under-contract',label:'Under Contract',prob:'85%'},{id:'closed',label:'Closed',prob:'100%'}];
 function dealFee(d){return d.fee||Math.round(d.value*0.035*(STAGES.findIndex(s=>s.id===d.stage)+1)/5);}
+function fixBrokenDeals(){
+  const validStages=['prelim','loi','lease-sale','under-contract','closed'];
+  let fixed=0;
+  STATE.deals.forEach(d=>{
+    if(!validStages.includes(d.stage)){
+      console.log('Fixing deal:', d.name, 'stage was:', d.stage);
+      d.stage='prelim';
+      fixed++;
+    }
+    if(!d.type||!['brok','dev'].includes(d.type)) d.type='brok';
+  });
+  saveState();
+  renderDeals();
+  if(fixed>0) toast(`Fixed ${fixed} deal(s) — now showing in Prelim`);
+  else toast('All deals look good — check Brokerage/Development filters are on');
+}
+
 function toggleDealFilter(type){if(type==='brok')STATE.dealFilterBrok=!STATE.dealFilterBrok;else STATE.dealFilterDev=!STATE.dealFilterDev;saveState();document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok);document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev);renderDeals();}
 function renderDeals(){
   // Fix any deals with invalid stage values
