@@ -403,6 +403,18 @@ html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
 .day.task-drag-over .dbody{background:color-mix(in oklab,var(--brok) 6%,var(--surface));outline:2px dashed var(--brok-line);border-radius:var(--r-sm);}
 .task{cursor:grab;}
 .task:active{cursor:grabbing;}
+
+/* PERSONAL TASKS */
+.personal-task{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid var(--line-2);font-size:13px;}
+.personal-task:last-child{border-bottom:none;}
+.personal-task .pt-title{flex:1;line-height:1.3;}
+.personal-task.pt-done .pt-title{color:var(--ink-3);text-decoration:line-through;}
+.personal-task .pt-del{background:none;border:none;color:var(--ink-3);font-size:12px;padding:2px 4px;border-radius:4px;cursor:pointer;opacity:0;transition:opacity .15s;}
+.personal-task:hover .pt-del{opacity:1;}
+.personal-task .pt-del:hover{color:var(--danger);background:var(--danger-soft);}
+.pt-add-row{display:flex;gap:6px;margin-top:8px;}
+.pt-add-row input{flex:1;font-size:13px;padding:6px 10px;}
+.pt-add-row button{flex-shrink:0;}
 </style>
 </head>
 <body>
@@ -484,6 +496,10 @@ html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
     <div class="col">
       <div class="panel"><div class="panel-h"><h3>Long-term Projects</h3><span class="sub">development</span></div><div class="panel-b tight" id="projectsPanel"></div></div>
       <div class="panel"><div class="panel-h"><h3>Follow-ups due</h3><span class="badge over" id="followupBadge">0 overdue</span></div><div class="panel-b tight" id="followupsPanel"></div></div>
+      <div class="panel">
+        <div class="panel-h"><h3>Personal Tasks</h3><span class="badge time" id="personalTaskCount">0</span></div>
+        <div class="panel-b tight" id="personalTasksPanel"></div>
+      </div>
     </div>
   </div>
 </section>
@@ -672,6 +688,7 @@ function defaultState(){
       {geo:'Columbia',outlet:'The State',hl:'Midlands multifamily starts cool as financing costs hold'},
     ],
     filterBrok:true,filterDev:true,dealFilterBrok:true,dealFilterDev:true,
+    personalTasks:[],
     projFilterBrok:true,projFilterDev:true,selectedContact:'c1',selectedMapDeal:'d1',
   };
 }
@@ -715,7 +732,7 @@ function reRenderAll(){
   applyTheme();
   showTab(STATE.activeTab||'home');
   renderWeek();renderKPIs();renderProjects();renderFollowups();
-  renderDeals();renderContacts();renderTenants();
+  renderDeals();renderContacts();renderTenants();renderPersonalTasks();
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
@@ -1983,13 +2000,59 @@ function saveTenant(existingId){
   toast(existingId?'Tenant updated.':'Tenant added · Contact synced to Contacts page.');
 }
 
+// PERSONAL TASKS
+function renderPersonalTasks(){
+  if(!STATE.personalTasks) STATE.personalTasks=[];
+  const panel=document.getElementById('personalTasksPanel');
+  const countEl=document.getElementById('personalTaskCount');
+  if(!panel) return;
+  const open=STATE.personalTasks.filter(t=>!t.done).length;
+  if(countEl) countEl.textContent=open+' open';
+  const tasksHtml=STATE.personalTasks.map((t,i)=>`
+    <div class="personal-task ${t.done?'pt-done':''}">
+      <span class="cbx ${t.done?'on':''}" onclick="togglePersonalTask(${i})" style="flex-shrink:0"></span>
+      <span class="pt-title">${t.title}</span>
+      <button class="pt-del" onclick="deletePersonalTask(${i})" title="Delete">&times;</button>
+    </div>`).join('');
+  panel.innerHTML=tasksHtml+`
+    <div class="pt-add-row">
+      <input type="text" id="ptInput" placeholder="Add a personal reminder&hellip;" onkeydown="if(event.key==='Enter')addPersonalTask()"/>
+      <button class="btn sm primary" onclick="addPersonalTask()">+</button>
+    </div>`;
+}
+
+function addPersonalTask(){
+  const input=document.getElementById('ptInput');
+  if(!input) return;
+  const title=input.value.trim();
+  if(!title) return;
+  if(!STATE.personalTasks) STATE.personalTasks=[];
+  STATE.personalTasks.unshift({id:uid(),title,done:false});
+  input.value='';
+  saveState();
+  renderPersonalTasks();
+}
+
+function togglePersonalTask(idx){
+  if(!STATE.personalTasks[idx]) return;
+  STATE.personalTasks[idx].done=!STATE.personalTasks[idx].done;
+  saveState();
+  renderPersonalTasks();
+}
+
+function deletePersonalTask(idx){
+  STATE.personalTasks.splice(idx,1);
+  saveState();
+  renderPersonalTasks();
+}
+
 // Init
 function init(){
   applyTheme();showTab(STATE.activeTab||'home');
   fetchNews();renderWeek();renderKPIs();renderProjects();renderFollowups();
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
-  renderDeals();renderContacts();renderTenants();syncAllTenantContacts();fetchRates();initMsal();
+  renderDeals();renderContacts();renderTenants();syncAllTenantContacts();renderPersonalTasks();fetchRates();initMsal();
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
   document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
   document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
