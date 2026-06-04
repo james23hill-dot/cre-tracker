@@ -893,7 +893,7 @@ function renderProjectsTab(){
   if(!projs.length){grid.innerHTML='<div class="proj-empty" style="grid-column:1/-1">No projects yet.</div>';return;}
   grid.innerHTML=projs.map(p=>{
     const linkedDeals=STATE.deals.filter(d=>d.projectId===p.id);
-    const dealsHtml=linkedDeals.length?linkedDeals.map(d=>{const sl=STAGES.find(s=>s.id===d.stage)?.label||d.stage;return`<div class="proj-deal-row"><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span><span class="dname">${d.name}</span><span class="dstage">${sl}</span><span class="dval">${fmtMoney(d.value)}</span></div>`;}).join(''):'<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No deals linked. Edit a deal to link here.</div>';
+    const dealsHtml=linkedDeals.length?linkedDeals.map(d=>{const sl=STAGES.find(s=>s.id===d.stage)?.label||d.stage;return`<div class="proj-deal-row"><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span><span class="dname">${d.name}</span><span class="dstage">${sl}</span><span class="dval">${fmtMoney(d.value)}</span><button onclick="openEditDeal('${d.id}')" class="btn sm" style="padding:0 8px;height:24px;font-size:11px;margin-left:auto;">Edit</button><button onclick="deleteDealFromProject('${d.id}')" style="background:none;border:none;color:var(--danger);font-size:14px;cursor:pointer;padding:0 4px;" title="Delete">&#10005;</button></div>`;}).join(''):'<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No deals linked. Edit a deal to link here.</div>';
     const projTasks=STATE.tasks.filter(t=>t.projectId===p.id||t.projectId===p.name);
     const openT=projTasks.filter(t=>!t.done).length,doneT=projTasks.filter(t=>t.done).length;
     const tasksHtml=projTasks.length?projTasks.slice(0,5).map(t=>`<div class="proj-task-row"><span class="cbx-sm ${t.done?'on':''}"></span><span style="${t.done?'color:var(--ink-3);text-decoration:line-through':''};flex:1">${t.title}</span><span class="badge time" style="font-size:10px">${t.time||fmtDisplay(t.day)}</span></div>`).join('')+(projTasks.length>5?`<div style="font-size:11px;color:var(--ink-3);padding-top:4px">+${projTasks.length-5} more</div>`:''):'<div style="font-size:12px;color:var(--ink-3);padding:4px 0;">No tasks yet.</div>';
@@ -1109,6 +1109,14 @@ function deleteSuite(projId,idx){
   if(!p)return;
   p.suites.splice(idx,1);
   saveState();renderProjectsTab();
+}
+
+function deleteDealFromProject(dealId){
+  if(!confirm('Delete this deal?')) return;
+  STATE.deals=STATE.deals.filter(x=>x.id!==dealId);
+  STATE.contacts.forEach(c=>{c.linkedDeals=(c.linkedDeals||[]).filter(id=>id!==dealId);});
+  saveState();renderProjectsTab();renderDeals();renderKPIs();
+  toast('Deal deleted.');
 }
 
 function toggleProjFilter(type){if(type==='brok')STATE.projFilterBrok=!(STATE.projFilterBrok!==false);else STATE.projFilterDev=!(STATE.projFilterDev!==false);saveState();document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);renderProjectsTab();}
