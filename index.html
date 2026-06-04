@@ -695,34 +695,8 @@ async function pushToSupabase(){
 }
 
 async function pullFromSupabase(){
-  try{
-    const {data, error} = await sbClient.from('cre_state').select('data, updated_at').eq('id','main').single();
-    if(error||!data) return;
-    const remote = data.data;
-    if(!remote||!remote.tasks) return;
-    const localTs = STATE._savedAt || 0;
-    const remoteTs = new Date(data.updated_at).getTime();
-    if(remoteTs > localTs){
-      const defaults = defaultState();
-      // Preserve local deals/contacts/projects if remote has none (prevents data loss)
-      const localDeals = STATE.deals||[];
-      const localContacts = STATE.contacts||[];
-      const localProjects = STATE.projects||[];
-      const localTasks = STATE.tasks||[];
-      STATE = remote;
-      STATE._savedAt = remoteTs;
-      // Never overwrite with empty arrays
-      if(!STATE.deals||STATE.deals.length===0) STATE.deals = localDeals;
-      if(!STATE.contacts||STATE.contacts.length===0) STATE.contacts = localContacts;
-      if(!STATE.projects||STATE.projects.length===0) STATE.projects = localProjects;
-      if(!STATE.tasks||STATE.tasks.length===0) STATE.tasks = localTasks;
-      if(!STATE.tenants||STATE.tenants.length===0) STATE.tenants = defaults.tenants;
-      syncAllTenantContacts();
-      try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
-      reRenderAll();
-      toast('Data synced from cloud ☁️');
-    }
-  }catch(e){console.warn('Supabase pull failed:',e);}
+  // Disabled - localStorage is source of truth
+  // Supabase push still works but we don't pull back
 }
 
 function reRenderAll(){
