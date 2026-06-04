@@ -1125,6 +1125,9 @@ const STAGES=[{id:'prelim',label:'Prelim',prob:'10%'},{id:'loi',label:'LOI',prob
 function dealFee(d){return d.fee||Math.round(d.value*0.035*(STAGES.findIndex(s=>s.id===d.stage)+1)/5);}
 function toggleDealFilter(type){if(type==='brok')STATE.dealFilterBrok=!STATE.dealFilterBrok;else STATE.dealFilterDev=!STATE.dealFilterDev;saveState();document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok);document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev);renderDeals();}
 function renderDeals(){
+  // Fix any deals with invalid stage values
+  const validStages=['prelim','loi','lease-sale','under-contract','closed'];
+  STATE.deals.forEach(d=>{ if(!validStages.includes(d.stage)) d.stage='prelim'; });
   const active=STATE.deals.filter(d=>d.stage!=='closed');
   document.getElementById('deal-summary').textContent=`${active.length} active deals \u00b7 ${fmtMoney(active.reduce((s,d)=>s+dealFee(d),0))} gross fees`;
   document.getElementById('kanban').innerHTML=STAGES.map(stage=>{
