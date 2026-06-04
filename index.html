@@ -391,6 +391,12 @@ html[data-theme="dark"] .tcat-retail{background:#2e2000;color:#d4a830;}
 .tenant-outreach .to-stage{font-size:12px;font-weight:600;color:var(--ink-2);margin-bottom:4px;}
 .tenant-outreach textarea{font-size:12px;height:52px;resize:none;}
 .tenant-filter-bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px;align-items:center;}
+
+/* DRAG AND DROP */
+.deal.dragging{opacity:.4;transform:scale(.97);}
+.kcol.drag-over .kb{background:color-mix(in oklab,var(--brok) 8%,var(--surface-2));border-radius:var(--r-sm);outline:2px dashed var(--brok-line);}
+.kcol.dead-col{opacity:.7;}
+.kcol.dead-col .kh .kt{color:var(--danger);}
 </style>
 </head>
 <body>
@@ -1109,10 +1115,10 @@ function renderFollowups(){
 }
 
 // Deal tracker
-const STAGES=[{id:'prelim',label:'Prelim',prob:'10%'},{id:'loi',label:'LOI',prob:'30%'},{id:'lease-sale',label:'Lease / Sale',prob:'60%'},{id:'under-contract',label:'Under Contract',prob:'85%'},{id:'closed',label:'Closed',prob:'100%'}];
+const STAGES=[{id:'prelim',label:'Prelim',prob:'10%'},{id:'loi',label:'LOI',prob:'40%'},{id:'under-contract',label:'Under Contract',prob:'85%'},{id:'closed',label:'Closed',prob:'100%'},{id:'dead',label:'Dead',prob:'0%'}];
 function dealFee(d){return d.fee||Math.round(d.value*0.035*(STAGES.findIndex(s=>s.id===d.stage)+1)/5);}
 function fixBrokenDeals(){
-  const validStages=['prelim','loi','lease-sale','under-contract','closed'];
+  const validStages=['prelim','loi','under-contract','closed','dead'];
   let fixed=0;
   STATE.deals.forEach(d=>{
     if(!validStages.includes(d.stage)){
@@ -1128,10 +1134,50 @@ function fixBrokenDeals(){
   else toast('All deals look good — check Brokerage/Development filters are on');
 }
 
+// DRAG AND DROP
+let draggedDealId = null;
+
+function dragStart(e, dealId){
+  draggedDealId = dealId;
+  e.dataTransfer.effectAllowed = 'move';
+  setTimeout(()=>{ const el=document.querySelector(`.deal[ondragstart*="${dealId}"]`); if(el) el.classList.add('dragging'); }, 0);
+}
+
+function dragEnd(e){
+  document.querySelectorAll('.deal.dragging').forEach(el=>el.classList.remove('dragging'));
+  document.querySelectorAll('.kcol.drag-over').forEach(el=>el.classList.remove('drag-over'));
+}
+
+function dragOver(e){
+  e.preventDefault();
+  e.dataTransfer.dropEffect = 'move';
+  const col = e.currentTarget;
+  if(!col.classList.contains('drag-over')) col.classList.add('drag-over');
+}
+
+function dragLeave(e){
+  e.currentTarget.classList.remove('drag-over');
+}
+
+function dropDeal(e, newStage){
+  e.preventDefault();
+  e.currentTarget.classList.remove('drag-over');
+  if(!draggedDealId) return;
+  const deal = STATE.deals.find(d=>d.id===draggedDealId);
+  if(!deal) return;
+  if(deal.stage === newStage) return;
+  deal.stage = newStage;
+  draggedDealId = null;
+  saveState();
+  renderDeals();
+  renderKPIs();
+  toast(`Deal moved to ${newStage.replace('-',' ')}`);
+}
+
 function toggleDealFilter(type){if(type==='brok')STATE.dealFilterBrok=!STATE.dealFilterBrok;else STATE.dealFilterDev=!STATE.dealFilterDev;saveState();document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok);document.getElementById('deal-filter-dev').classList.toggle('on',STATE.dealFilterDev);renderDeals();}
 function renderDeals(){
   // Fix any deals with invalid stage values
-  const validStages=['prelim','loi','lease-sale','under-contract','closed'];
+  const validStages=['prelim','loi','under-contract','closed','dead'];
   STATE.deals.forEach(d=>{ if(!validStages.includes(d.stage)) d.stage='prelim'; });
   const active=STATE.deals.filter(d=>d.stage!=='closed');
   document.getElementById('deal-summary').textContent=`${active.length} active deals \u00b7 ${fmtMoney(active.reduce((s,d)=>s+dealFee(d),0))} gross fees`;
@@ -1147,11 +1193,12 @@ function renderDeals(){
       const projName=d.projectId?(STATE.projects.find(p=>p.id===d.projectId)?.name||''):'';
       // Build key dates mini-timeline for deal card
       const datesHtml=(()=>{const parts=[];if(d.dateFirstContact)parts.push(`<span title="First contact">&#128222; ${fmtDisplay(d.dateFirstContact)}</span>`);if(d.dateLoiSent)parts.push(`<span title="LOI sent">&#128221; ${fmtDisplay(d.dateLoiSent)}</span>`);if(d.dateLeaseSent)parts.push(`<span title="Lease sent">&#128196; ${fmtDisplay(d.dateLeaseSent)}</span>`);return parts.length?`<div style="display:flex;flex-wrap:wrap;gap:8px;margin-top:7px;font-size:10.5px;color:var(--ink-3);font-family:var(--mono)">${parts.join('')}</div>`:''})();
-      if(stage.id==='closed')return`<div class="deal ${d.type} closed-deal" onclick="openEditDeal('${d.id}')"><div class="dn">${d.name}</div><div class="ds">${d.location} &middot; ${d.size||'&mdash;'}</div>${datesHtml}<div class="df"><span class="badge good">won &middot; ${fmtMoney(d.fee||dealFee(d))}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div></div>`;
+      if(stage.id==='closed'||stage.id==='dead')return`<div class="deal ${d.type} closed-deal" draggable="true" ondragstart="dragStart(event,'${d.id}')" ondragend="dragEnd(event)" onclick="openEditDeal('${d.id}')"><div class="dn">${d.name}</div><div class="ds">${d.location} &middot; ${d.size||'&mdash;'}</div>${datesHtml}<div class="df"><span class="badge good">won &middot; ${fmtMoney(d.fee||dealFee(d))}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div></div>`;
       const cc=STATE.contacts.filter(c=>(c.linkedDeals||[]).includes(d.id));
-      return`<div class="deal ${d.type}" onclick="openEditDeal('${d.id}')"><div class="dn">${d.name}</div><div class="ds">${d.location} &middot; ${d.size||'&mdash;'}</div>${projName?`<div style="font-size:11px;color:var(--ink-3);margin-bottom:6px;">&#128193; ${projName}</div>`:''}<div class="df"><span class="level ${levelCls}">${bars}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>${datesHtml}${cc.length?`<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px;">${cc.map(c=>`<span style="font-size:11px;background:var(--brok-soft);color:var(--brok);padding:2px 7px;border-radius:99px;font-weight:500">&#128100; ${c.name}</span>`).join('')}</div>`:''}</div>`;
+      return`<div class="deal ${d.type}" draggable="true" ondragstart="dragStart(event,'${d.id}')" ondragend="dragEnd(event)" onclick="openEditDeal('${d.id}')"><div class="dn">${d.name}</div><div class="ds">${d.location} &middot; ${d.size||'&mdash;'}</div>${projName?`<div style="font-size:11px;color:var(--ink-3);margin-bottom:6px;">&#128193; ${projName}</div>`:''}<div class="df"><span class="level ${levelCls}">${bars}</span><span class="tag ${d.type}">${d.type==='brok'?'Brok':'Dev'}</span></div>${datesHtml}${cc.length?`<div style="margin-top:7px;display:flex;flex-wrap:wrap;gap:4px;">${cc.map(c=>`<span style="font-size:11px;background:var(--brok-soft);color:var(--brok);padding:2px 7px;border-radius:99px;font-weight:500">&#128100; ${c.name}</span>`).join('')}</div>`:''}</div>`;
     }).join('');
-    return`<div class="kcol"><div class="kh"><span class="kt">${stage.label}</span><span class="ks">${deals.length}</span></div><div class="ksum">${stage.prob} &middot; ${fmtMoney(fees)} fees</div><div class="kb">${dealsHtml}<div class="addt" onclick="openModalForStage('${stage.id}')">+ new deal</div></div></div>`;
+    const deadClass=stage.id==='dead'?' dead-col':'';
+    return`<div class="kcol${deadClass}" ondragover="dragOver(event)" ondragleave="dragLeave(event)" ondrop="dropDeal(event,'${stage.id}')"><div class="kh"><span class="kt">${stage.label}</span><span class="ks">${deals.length}</span></div><div class="ksum">${stage.prob} &middot; ${fmtMoney(fees)} fees</div><div class="kb">${dealsHtml}<div class="addt" onclick="openModalForStage('${stage.id}')">+ new deal</div></div></div>`;
   }).join('');
 }
 
