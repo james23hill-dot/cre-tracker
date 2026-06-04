@@ -703,15 +703,20 @@ async function pullFromSupabase(){
     const localTs = STATE._savedAt || 0;
     const remoteTs = new Date(data.updated_at).getTime();
     if(remoteTs > localTs){
-      // Merge remote data but always keep code-defined tenants if remote has none
       const defaults = defaultState();
+      // Preserve local deals/contacts/projects if remote has none (prevents data loss)
+      const localDeals = STATE.deals||[];
+      const localContacts = STATE.contacts||[];
+      const localProjects = STATE.projects||[];
+      const localTasks = STATE.tasks||[];
       STATE = remote;
       STATE._savedAt = remoteTs;
-      // If remote has no tenants (old save), inject defaults
-      if(!STATE.tenants||STATE.tenants.length===0){
-        STATE.tenants = defaults.tenants;
-      }
-      // Sync all tenant contacts to contacts page
+      // Never overwrite with empty arrays
+      if(!STATE.deals||STATE.deals.length===0) STATE.deals = localDeals;
+      if(!STATE.contacts||STATE.contacts.length===0) STATE.contacts = localContacts;
+      if(!STATE.projects||STATE.projects.length===0) STATE.projects = localProjects;
+      if(!STATE.tasks||STATE.tasks.length===0) STATE.tasks = localTasks;
+      if(!STATE.tenants||STATE.tenants.length===0) STATE.tenants = defaults.tenants;
       syncAllTenantContacts();
       try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
       reRenderAll();
