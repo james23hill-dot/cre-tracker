@@ -898,7 +898,7 @@ function renderWeek(){
         <div class="tmeta">${projName?`<span class="tproj">${projName}</span>`:''}${cEl}${timeEl}</div>
       </div>`;
     }).join('');
-    return`<div class="day ${isToday?'today':''}"><div class="dh"><span class="dow">${dayNames[i]}</span><span class="dn">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}${isToday?' \u00b7 TODAY':''}</span></div><div class="dbody" id="day-${ds}">${tasksHtml}<div class="addt" onclick="openAddTask('${ds}')">+ add task</div></div></div>`;
+    return`<div class="day ${isToday?'today':''}" ondragover="taskDragOver(event)" ondragleave="taskDragLeave(event)" ondrop="taskDrop(event,'${ds}')"><div class="dh"><span class="dow">${dayNames[i]}</span><span class="dn">${d.toLocaleDateString('en-US',{month:'short',day:'numeric'})}${isToday?' \u00b7 TODAY':''}</span></div><div class="dbody" id="day-${ds}">${tasksHtml}<div class="addt" onclick="openAddTask('${ds}')">+ add task</div></div></div>`;
   }).join('');
   updateWeekRing();
 }
