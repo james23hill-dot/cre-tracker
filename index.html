@@ -724,8 +724,38 @@ async function pushToSupabase(){
 }
 
 async function pullFromSupabase(){
-  // Disabled - localStorage is source of truth
-  // Supabase push still works but we don't pull back
+  try{
+    const {data, error} = await sbClient.from('cre_state').select('data, updated_at').eq('id','main').single();
+    if(error||!data||!data.data) return;
+    const remote = data.data;
+    // Only use remote if it has actual content
+    if(!remote.deals && !remote.projects && !remote.contacts) return;
+    const remoteTs = new Date(data.updated_at).getTime();
+    const localTs = STATE._savedAt || 0;
+    // Only overwrite if remote is newer AND has more data
+    const remoteHasData = (remote.deals||[]).length > 0 || (remote.projects||[]).length > 0;
+    const localHasData = (STATE.deals||[]).length > 0 || (STATE.projects||[]).length > 0;
+    // If local has data, only update if remote is strictly newer
+    if(localHasData && remoteTs <= localTs) return;
+    // If local has no data, always load from remote
+    if(!localHasData || remoteTs > localTs + 5000){
+      const defaults = defaultState();
+      // Preserve local data if remote is empty for that field
+      const merged = Object.assign({}, remote);
+      if(!merged.deals||merged.deals.length===0) merged.deals = STATE.deals||[];
+      if(!merged.contacts||merged.contacts.length===0) merged.contacts = STATE.contacts||[];
+      if(!merged.projects||merged.projects.length===0) merged.projects = STATE.projects||[];
+      if(!merged.tasks||merged.tasks.length===0) merged.tasks = STATE.tasks||[];
+      if(!merged.tenants||merged.tenants.length===0) merged.tenants = defaults.tenants;
+      if(!merged.personalTasks) merged.personalTasks = STATE.personalTasks||[];
+      merged._savedAt = remoteTs;
+      STATE = merged;
+      try{localStorage.setItem(STORE_KEY, JSON.stringify(STATE));}catch(e){}
+      syncAllTenantContacts();
+      reRenderAll();
+      toast('Data synced from cloud ☁️');
+    }
+  }catch(e){console.warn('Supabase pull failed:',e);}
 }
 
 function reRenderAll(){
@@ -2053,6 +2083,8 @@ function init(){
   document.getElementById('proj-filter-brok').classList.toggle('on',STATE.projFilterBrok!==false);
   document.getElementById('proj-filter-dev').classList.toggle('on',STATE.projFilterDev!==false);
   renderDeals();renderContacts();renderTenants();syncAllTenantContacts();renderPersonalTasks();fetchRates();initMsal();
+  // Pull from cloud on load
+  pullFromSupabase();
   document.getElementById('filter-brok').classList.toggle('on',STATE.filterBrok!==false);
   document.getElementById('filter-dev').classList.toggle('on',STATE.filterDev!==false);
   document.getElementById('deal-filter-brok').classList.toggle('on',STATE.dealFilterBrok!==false);
