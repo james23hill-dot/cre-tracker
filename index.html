@@ -1351,8 +1351,19 @@ function selectImp(n){document.getElementById('f-importance').value=n;document.q
 
 // TASK MODAL — no status badge, new follow-up UX (days OR date side-by-side)
 function renderTaskModal(box,data={}){
-  const days=[];const mon=currentWeekMonday();
-  for(let i=0;i<5;i++){const d=new Date(mon);d.setDate(d.getDate()+i);days.push({val:fmt(d),label:d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});}
+  const days=[];const startDay=new Date();startDay.setHours(0,0,0,0);
+  // Show 10 days from today so you can move tasks to next week
+  for(let i=0;i<10;i++){
+    const d=new Date(startDay);d.setDate(d.getDate()+i);
+    // Skip weekends
+    if(d.getDay()===0||d.getDay()===6) continue;
+    days.push({val:fmt(d),label:d.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});
+  }
+  // Also include the task's current day if not already in list
+  if(data.day && !days.find(d=>d.val===data.day)){
+    const existing=new Date(data.day+'T12:00:00');
+    days.unshift({val:data.day,label:existing.toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})});
+  }
   const daysOpts=days.map(d=>`<option value="${d.val}" ${data.day===d.val?'selected':''}>${d.label}</option>`).join('');
   const projOpts=STATE.projects.map(p=>`<option value="${p.id}" ${data.projectId===p.id?'selected':''}>${p.name}</option>`).join('');
   box.innerHTML=`
